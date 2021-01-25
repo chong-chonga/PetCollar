@@ -1,0 +1,23 @@
+# 对应于WebProperties中的属性, 配置后, 将会影响WebMvcAutoConfiguration.addResourceHandlers方法
+#spring:
+#  web:
+#    resources:
+#      add-mappings: false
+
+#配置页面国际化
+spring:
+  messages:
+    basename: i18n.login
+  servlet:
+    multipart:
+      max-file-size: 1MB
+      max-request-size: 2MB
+
+  mvc:
+    servlet:
+      path: / #设置dispatcherServlet路径为默认值
+server:
+  port: 8082
+  error:
+    path: /error
+

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <div th:replace="common :: meta-template"></div>
+
+    <title>Dynamic Table</title>
+    <link href="js/advanced-datatable/css/demo_page.css" rel="stylesheet"/>
+    <link href="js/advanced-datatable/css/demo_table.css" rel="stylesheet"/>
+    <link rel="stylesheet" href="js/data-tables/DT_bootstrap.css"/>
+    <div th:replace="common :: favicon"></div>
+    <div th:replace="common :: CommonCss"></div>
+</head>
+
+<body class="sticky-header">
+
+<section>
+    <!--    左侧边栏-->
+    <div th:replace="common :: LeftSide"></div>
+
+    <!-- main content start-->
+    <div class="main-content">
+        <!--表头-->
+        <div th:replace="common :: HeaderSection"></div>
+
+        <!-- page heading start-->
+        <div class="page-heading">
+            <h3>
+                Dynamic Table
+            </h3>
+            <ul class="breadcrumb">
+                <li>
+                    <a href="#">Dashboard</a>
+                </li>
+                <li>
+                    <a href="#">Data Tables</a>
+                </li>
+                <li class="active"> Dynamic Table</li>
+            </ul>
+        </div>
+        <!-- page heading end-->
+
+        <!--body wrapper start-->
+        <div class="wrapper">
+            <div class="row">
+                <div class="col-sm-12">
+                    <section class="panel">
+                        <header class="panel-heading">
+                            宠物列表
+                            <span class="tools pull-right">
+                <a href="javascript:;" class="fa fa-chevron-down"></a>
+                <a href="javascript:;" class="fa fa-times"></a>
+             </span>
+                        </header>
+                        <div class="panel-body">
+                            <div class="adv-table">
+                                <table class="display table table-bordered" id="hidden-table-info">
+                                    <thead>
+                                    <tr>
+                                        <th>序号</th>
+                                        <th>宠物id</th>
+                                        <th>头像路径</th>
+                                        <th>宠物名称</th>
+                                        <th>品种</th>
+                                        <th>宠物介绍</th>
+                                        <th>是否公开?</th>
+                                        <th>用户id</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody class="gradeX" th:each="pet, status:${pets}">
+                                    <tr>
+                                        <td th:text="${status.count}"></td>
+                                        <td th:text="${pet.petId}"></td>
+                                        <td th:text="${pet.petPortraitPath}"></td>
+                                        <td th:text="${pet.petName}"></td>
+                                        <td th:text="${pet.petSpecies}"></td>
+                                        <td th:text="${pet.petIntroduction}"></td>
+                                        <td th:text="${pet.isPetOvert}"></td>
+                                        <td th:text="${pet.userId}"></td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+        <!--body wrapper end-->
+
+        <!--页脚-->
+        <footer th:include="common :: footer"></footer>
+
+
+    </div>
+    <!-- main content end-->
+</section>
+
+
+
+<!--dynamic table-->
+<script type="text/javascript" language="javascript"
+        src="js/advanced-datatable/js/jquery.dataTables.js"></script>
+<script type="text/javascript" src="js/data-tables/DT_bootstrap.js"></script>
+<!--dynamic table initialization -->
+<script src="js/dynamic_table_init.js"></script>
+
+<div th:replace="common :: CommonJs"></div>
+<div th:replace="common :: jsForAll"></div>
+
+</body>
+</html>

@@ -1,0 +1,132 @@
+
+body {
+    background-image: url("../images/background.jpg");
+    background-size: 100%;
+    background-repeat: no-repeat;
+}
+
+.content {
+    width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.content>.avatar {
+    border-radius: 50%;
+    height: 100px;
+    width: 100px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 30px;
+    margin-bottom: 60px;
+    background-image: url("../images/minHeader.jpg");
+    background-size: 100%;
+}
+
+.content>.loginOrRegisterBox {
+    height: 340px;
+    width: 500px;
+    border-radius: 10px;
+    background-color: rgba(255, 255, 255, 0.3)
+}
+
+.content>.loginOrRegisterBox>.witch {
+    height: 40px;
+    width: 80%;
+    margin-left: auto;
+    margin-right: auto;
+    padding-top: 30px;
+    list-style: none;
+}
+
+.content>.loginOrRegisterBox>.witch>#loginButton,
+.content>.loginOrRegisterBox>.witch>#registerButton {
+    width: 200px;
+    height: 40px;
+    line-height: 40px;
+    text-align: center;
+    color: #fff;
+}
+
+.content>.loginOrRegisterBox>.witch>#loginButton {
+    border-bottom: 2px solid #fff;
+    float: left;
+    margin-left: -20px;
+}
+
+.content>.loginOrRegisterBox>.witch>#registerButton {
+    float: right;
+    margin-right: 20px;
+}
+
+.content>.loginOrRegisterBox>#form>form>input {
+    width: 97.5%;
+    height: 40px;
+    margin-top: 15px;
+    line-height: 20px;
+    padding-left: 10px;
+    border-radius: 5px;
+    border-width: 0;
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+.content>.loginOrRegisterBox>#form>form>input[type='submit'] {
+    background-color: aqua;
+    width: 100%;
+    color: white;
+}
+
+.content>.loginOrRegisterBox>#form>form {
+    margin-left: auto;
+    margin-right: auto;
+    width: 80%;
+    height: 80%;
+}
+.content>.loginOrRegisterBox>#form>form>div {
+    margin-top: 20px;
+    height: 40px;
+    width: 100%;
+}
+.content>.loginOrRegisterBox>#form>form>div>input,
+.content>.loginOrRegisterBox>#form>form>div>p {
+    float: left;
+}
+.content>.loginOrRegisterBox>#form>form>div>a {
+    float: right;
+    margin-top: 1px;
+    color: white;
+    text-decoration: none;
+}
+.content>.loginOrRegisterBox>#form>form>div>p {
+    margin-top: 1.5px;
+    color: white;
+}
+.content>.loginOrRegisterBox>#form>form>div>input {
+    height: 20px;
+    width: 20px;
+}
+.content>.loginOrRegisterBox>#form>form>div>input::after {
+    background-color: rgba(255, 255, 255, 1);
+}
+.content>.loginOrRegisterBox>#form>form>div>a:visited {
+    color: white;
+}
+#register {
+    display: none;
+}
+#copyright{
+    font-size: 8px;
+    text-align: center;
+    color: white;
+}
+#msg{
+    font-size: 16px;
+    font-weight: bold;
+    color: red;
+    text-align: center;
+}
+span{
+    font-size: 14px;
+    font-weight: bold;
+    color: red;
+}

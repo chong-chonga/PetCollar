@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <div th:replace="common :: meta-template"></div>
+
+    <title>页面找不到了</title>
+    <div th:replace="common :: favicon"></div>
+    <div th:replace="common :: CommonCss"></div>
+    <style>
+        #copyright{
+            font-size: 12px;
+            text-align: center;
+            color: white;
+            background-color: #6bc5a4;
+        }
+    </style>
+</head>
+
+<body class="error-page">
+
+<section>
+    <div class="container ">
+
+        <section class="error-wrapper text-center">
+            <h1><img alt="" th:src="@{/images/404-error.png}"></h1>
+            <h2>出错了!错误码:[[${status}]]</h2></h2>
+            <h3>错误信息: [[${message}]]</h3>
+            <a class="back-btn" th:href="@{/index.html}">回到首页</a>
+        </section>
+        <p id="copyright">2020-2021 &copy; All rights reserved by HLX</p>
+
+    </div>
+</section>
+
+<div th:replace="common :: CommonJs"></div>
+
+</body>
+</html>
