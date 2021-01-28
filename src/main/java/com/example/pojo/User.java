@@ -1,10 +1,13 @@
 package com.example.pojo;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-import org.thymeleaf.util.StringUtils;
 
 /**
  * @author 悠一木碧
@@ -13,11 +16,17 @@ import org.thymeleaf.util.StringUtils;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
+@TableName("user")
 public class User {
+    @TableId(value = "user_id", type = IdType.AUTO)
     private Integer userId;
+    @TableField(value = "user_portrait_path")
     private String userPortraitPath;
+    @TableField(value = "user_account")
     private String account;
+    @TableField(value = "user_password")
     private String password;
+    @TableField(value = "user_introduction")
     private String userIntroduction;
 
 }

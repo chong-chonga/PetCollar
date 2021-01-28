@@ -24,14 +24,14 @@ public class FileUploadController {
         try{
             log.info("newPassword={}, headPortraitName={}, photos.count={}", newPassword,
                     headPortrait.getOriginalFilename(), photos.length);
-            String prefixPath = "D:\\Code\\IdeaProjects\\springboot-03-web\\src\\main\\resources" +
+            String prefixPath = "D:\\StatusCode\\IdeaProjects\\springboot-03-web\\src\\main\\resources" +
                     "\\static\\images\\headPortrait\\";
             String suffix = ".jpg";
             if(!headPortrait.isEmpty()){
                 UUID headPortraitName = UUID.randomUUID();
                 headPortrait.transferTo(new File(prefixPath + headPortraitName + suffix));
             }
-            prefixPath = "D:\\Code\\IdeaProjects\\springboot-03-web\\src\\main\\resources" +
+            prefixPath = "D:\\StatusCode\\IdeaProjects\\springboot-03-web\\src\\main\\resources" +
                     "\\static\\images\\photos\\";
             for (MultipartFile photo : photos) {
                 UUID photoName = UUID.randomUUID();

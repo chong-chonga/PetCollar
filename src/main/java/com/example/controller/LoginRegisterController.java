@@ -1,11 +1,12 @@
 package com.example.controller;
 
+import com.example.pojo.User;
+import com.example.service.UserService;
 import org.apache.logging.log4j.util.Strings;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.servlet.http.HttpSession;
@@ -14,8 +15,10 @@ import java.util.Objects;
 /**
  * @author 悠一木碧
  */
-@Controller
+@Controller("defaultLoginRegisterController")
 public class LoginRegisterController {
+    @Autowired
+    private UserService userService;
     @PostMapping({"/user/login"})
     public String login(@RequestParam("username")String username,
                         @RequestParam("password")String password,
@@ -28,18 +31,17 @@ public class LoginRegisterController {
             return "redirect:/main.html";
         }
     }
+
+
     @PostMapping("/user/register")
-    public String register(@RequestParam("username")String username,
-                           @RequestParam("password")String password,
-                           @RequestParam("confirmPassword")String confirmPassword,
-                           Model model, HttpSession session){
-        boolean correctFormat = true;
-        if(correctFormat){
-            session.setAttribute("loginUser", username);
+    public String register(Model model, HttpSession session){
+            User user = new User();
+            user.setAccount("dasdasd");
+            user.setPassword("123tfd123");
+            user.setUserIntroduction("没有介绍");
+
+            session.setAttribute("loginUser", user);
             return "redirect:/main.html";
-        } else{
-            return "login";
-        }
 
     }
 

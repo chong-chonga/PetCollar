@@ -1,10 +1,7 @@
 package com.example.config;
 
-import com.example.exception.FormatErrorException;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
-import org.springframework.ui.Model;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 import org.springframework.web.servlet.ModelAndView;
 

@@ -1,21 +1,41 @@
-# 对应于WebProperties中的属性, 配置后, 将会影响WebMvcAutoConfiguration.addResourceHandlers方法
-#spring:
-#  web:
-#    resources:
-#      add-mappings: false
-
-#配置页面国际化
 spring:
-  messages:
-    basename: i18n.login
   servlet:
     multipart:
       max-file-size: 1MB
       max-request-size: 2MB
-
   mvc:
     servlet:
       path: / #设置dispatcherServlet路径为默认值
+  datasource:
+    # 连接到 EDS 服务器上的 mysql
+    username: 'hlx_is_1admin'
+    password: '#includeAa'
+    url: jdbc:mysql://rm-wz9oyu31wovh7q298fo.mysql.rds.aliyuncs.com:3306/pet_collar_pro?useSSL=false
+    driver-class-name: com.mysql.jdbc.Driver
+    druid:
+      filters: wall #开启druid数据库底层防火墙功能
+      filter:
+        wall:
+          enabled: true
+          config:
+            drop-table-allow: false #禁止删除表
+  jdbc:
+    template:
+      query-timeout: 3
+  redis:
+    #连接到 ECS 服务器上的 redis
+    host: 120.25.25.52
+    port: 6379
+    password: inAlieCs953cSustProJect4200
+    jedis:
+      pool:
+        max-active: 8
+        max-wait: -1
+        max-idle: 500
+        min-idle: 0
+#    lettuce:
+#      shutdown-timeout: 0
+    client-type: jedis
 server:
   port: 8082
   error:

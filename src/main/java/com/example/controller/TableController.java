@@ -2,6 +2,7 @@ package com.example.controller;
 
 import com.example.service.PetService;
 import com.example.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,8 +12,6 @@ import org.springframework.web.bind.annotation.GetMapping;
  */
 @Controller
 public class TableController {
-    private UserService userService = new UserService();
-    private PetService petService = new PetService();
 
     @GetMapping("/basic_table")
     public String basic_table(){
@@ -21,7 +20,6 @@ public class TableController {
 
     @GetMapping("/admin/users_Info.html")
     public String dynamic_table(Model model){
-        model.addAttribute("users", userService.allUsers());
         return "table/users_table";
     }
 
@@ -42,7 +40,6 @@ public class TableController {
 
     @GetMapping("/admin/petsInfo.html")
     public String pets_table(Model model){
-        model.addAttribute("pets", petService.allPets());
         return "table/pets_table";
     }
 }

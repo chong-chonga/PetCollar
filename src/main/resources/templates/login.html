@@ -37,11 +37,13 @@
                 </form>
                 <form id="register" th:action="@{/user/register}" method="post"
                       onsubmit="return checkRegister()">
-                    <input type="text"      placeholder="请输入您的用户名: 由 4 - 12 个字符组成"  name="username"
+                    <input type="text"      placeholder="请输入您的用户名: 由 4 - 12 个字符组成"
+                           name="user.account"
                            onblur="checkRegisterUsername(this.value);" id="registerUsername">
                     <span id="checkRegisterUsernameMsg"></span>
 
-                    <input type="password"  placeholder="请输入您的密码: 由 6 - 16 个字符组成"    name="password"
+                    <input type="password"  placeholder="请输入您的密码: 由 6 - 16 个字符组成"
+                           name="user.password"
                            onblur="checkRegisterPassword(this.value);" id="registerPassword">
                     <span id="checkRegisterPasswordMsg"></span>
 

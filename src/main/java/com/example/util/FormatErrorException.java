@@ -1,4 +1,4 @@
-package com.example.exception;
+package com.example.util;
 
 import lombok.NoArgsConstructor;
 import org.springframework.http.HttpStatus;
