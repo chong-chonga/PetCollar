@@ -42,4 +42,5 @@ public class TableController {
     public String pets_table(Model model){
         return "table/pets_table";
     }
+
 }

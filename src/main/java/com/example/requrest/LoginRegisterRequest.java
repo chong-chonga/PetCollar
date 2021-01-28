@@ -8,7 +8,6 @@ import java.util.Objects;
 /**
  * @author Lexin Huang
  */
-@EqualsAndHashCode(callSuper = true)
 @Data
 @ToString
 @AllArgsConstructor

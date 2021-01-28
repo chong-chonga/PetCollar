@@ -36,7 +36,11 @@ public class ReactiveResponse {
 
         public static final int TOKEN_NOT_EXISTS = 151;
 
-        public static final int Server_ERROR = 501;
+        public static final int UNSUPPORTED_MAILBOX_TYPE = 410;
+
+        public static final int Server_ERROR = 500;
+
+        public static final int EMAIL_FUNCTION_NOT_AVAILABLE = 501;
     }
 
 
@@ -77,6 +81,10 @@ public class ReactiveResponse {
                 return "输入密码与原密码不一致";
             case TOKEN_NOT_EXISTS:
                 return "无效令牌!";
+            case UNSUPPORTED_MAILBOX_TYPE:
+                return "不支持的邮箱验证类型";
+            case EMAIL_FUNCTION_NOT_AVAILABLE:
+                return "邮箱功能暂时不可用!";
             default:
                 return "NONE";
         }
