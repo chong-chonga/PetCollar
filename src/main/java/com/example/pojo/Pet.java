@@ -1,7 +1,9 @@
 package com.example.pojo;
 
+import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -14,8 +16,9 @@ import lombok.ToString;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
+@TableName("pet")
 public class Pet {
-    @TableId
+    @TableId(value = "pet_id", type = IdType.AUTO)
     private Integer petId;
     @TableField(value = "pet_portrait_path")
     private String petPortraitPath;

@@ -25,6 +25,7 @@ public class ReactiveResponse {
 
         public static final int MISMATCH = 102;
 
+        @Deprecated
         public static final int USERNAME_HAS_REGISTERED = 103;
 
         public static final int USERNAME_FORMAT_WRONG = 104;
