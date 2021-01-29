@@ -22,7 +22,7 @@ public class AccountFormat {
 
     private Integer formatVal;
 
-    public boolean correct(){
+    public boolean isCorrect(){
         return formatVal == CORRECT;
     }
 

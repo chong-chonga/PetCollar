@@ -20,9 +20,12 @@ public class MailSenderUtil {
     final
     JavaMailSenderImpl javaMailSender;
 
+    private MimeMessage mimeMessage;
+    private MimeMessageHelper mimeMessageHelper;
 
     public MailSenderUtil(JavaMailSenderImpl javaMailSender) {
         this.javaMailSender = javaMailSender;
+
     }
 
     public void sendEmail(String receiverAddress, String verificationCode) throws MessagingException {
