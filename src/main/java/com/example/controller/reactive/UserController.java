@@ -1,7 +1,7 @@
 package com.example.controller.reactive;
 
 import com.example.pojo.AccountVerificationLevel;
-import com.example.requrest.LoginRegisterRequest;
+import com.example.requrest.AccountRequest;
 import com.example.response.ReactiveResponse;
 import com.example.service.UserService;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,30 +17,31 @@ public class UserController {
 
     @RestController
     @RequestMapping("/mobile_platform/user")
-    public static class LoginRegisterController {
+    public static class AccountController {
         final
         UserService userService;
 
-        public LoginRegisterController(UserService userService) {
+        public AccountController(UserService userService) {
             this.userService = userService;
         }
 
 
         @PostMapping("/login")
-        public ReactiveResponse login(LoginRegisterRequest request) {
+        public ReactiveResponse login(AccountRequest request) {
             return userService.getAccountVerificationResponse(request,
                     AccountVerificationLevel.LOGIN);
         }
 
         @PostMapping("/register")
-        public ReactiveResponse register(LoginRegisterRequest request) {
+        public ReactiveResponse register(AccountRequest request) {
             return userService.getAccountVerificationResponse(request,
                     AccountVerificationLevel.REGISTER);
         }
 
-        @RequestMapping("change_password")
-        public ReactiveResponse updatePassword() {
-            return null;
+        @PostMapping("/retrieve_password")
+        public ReactiveResponse retrievePassword(AccountRequest request) {
+            return userService.getAccountVerificationResponse(request,
+                    AccountVerificationLevel.RETRIEVE_PASSWORD);
         }
     }
 }
