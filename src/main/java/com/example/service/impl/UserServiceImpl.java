@@ -8,6 +8,7 @@ import com.example.pojo.Account;
 import com.example.pojo.AccountFormat;
 import com.example.pojo.AccountVerificationLevel;
 import com.example.pojo.User;
+import com.example.requrest.AccountRequest;
 import com.example.requrest.LoginRegisterRequest;
 import com.example.response.LoginRegisterData;
 import com.example.response.ReactiveResponse;
@@ -23,7 +24,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
- * @author Lexin Huang
+ * @author Lexin Huang, Yu Wang
  */
 @Slf4j
 @Service
@@ -42,7 +43,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
 
     @Override
-    public ReactiveResponse getAccountVerificationResponse(LoginRegisterRequest request,
+    public ReactiveResponse getAccountVerificationResponse(AccountRequest request,
                                                            AccountVerificationLevel level) {
         AccountFormat accountFormat = FormatTool.solveAccountFormat(request.getAccount());
         ReactiveResponse response = new ReactiveResponse();
@@ -64,7 +65,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * @param loginRegisterData 登录注册响应数据
      * @param level 账号验证层级, 详情见 {@link AccountVerificationLevel}
      */
-    private void dispatchVerificationRequest(LoginRegisterRequest request,
+    private void dispatchVerificationRequest(AccountRequest request,
                                              ReactiveResponse response,
                                              LoginRegisterData loginRegisterData,
                                              AccountVerificationLevel level) {
@@ -86,7 +87,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
 
-    private void doLogin(LoginRegisterRequest request,
+    private void doLogin(AccountRequest request,
                          ReactiveResponse response,
                          LoginRegisterData loginRegisterData) {
         Account accountProvided = request.getAccount();
@@ -100,20 +101,30 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
 
+
     /**
-     * 此方法完成了 token 的生成, 并将其存储在 redis中, 有效时间为 1 小时
-     * 已知, 此方法如果用户多次使用同一账号多次登录, 会产生大量不必要的 token 在redis中
-     * 下一版本中, 修改该方法使得同一账号在一定时间内登录, 只会获得同一个token
-     * 并将其实现逻辑封装在 RedisService 类中
+     * 此方法完成了 token 的生成, 并将其存储在 redis中, 有效时间为 7 天
+     * 同一账号在7天内登录, 只会获得同一个token
      * @param loginRegisterData 登录注册响应数据
      * @param accountProvided 提供的账号信息
      */
-    @Deprecated
     private void configureVerificationData(LoginRegisterData loginRegisterData, Account accountProvided) {
-        String token = UUID.randomUUID().toString();
-        stringRedisTemplate.opsForValue().set(token, accountProvided.getUsername(), 1, TimeUnit.HOURS);
-        loginRegisterData.setVal(token);
+        String username = accountProvided.getUsername();
+        if (stringRedisTemplate.opsForValue().get(username)!=null){
+            String token = stringRedisTemplate.opsForValue().get(username);
+            loginRegisterData.setVal(token);
+            assert token != null;
+            //延长有效期
+            stringRedisTemplate.opsForValue().set(token, accountProvided.getUsername(), 7L, TimeUnit.DAYS);
+            stringRedisTemplate.opsForValue().set(accountProvided.getUsername(),token, 7L, TimeUnit.DAYS);
+        }else {
+            String token = UUID.randomUUID().toString();
+            stringRedisTemplate.opsForValue().set(token, accountProvided.getUsername(), 7L, TimeUnit.DAYS);
+            stringRedisTemplate.opsForValue().set(accountProvided.getUsername(),token, 7L, TimeUnit.DAYS);
+            loginRegisterData.setVal(token);
+        }
     }
+
 
     /**
      * 此方法已经过时, 由于此方法渗透到了 mapper 层的配置, 进行了耦合性的跨层使用
@@ -130,7 +141,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
 
-    private void doRegister(LoginRegisterRequest request,
+    private void doRegister(AccountRequest request,
                             ReactiveResponse response,
                             LoginRegisterData loginRegisterData) {
         String usernameProvided = request.getAccount().getUsername();
