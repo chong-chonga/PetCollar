@@ -3,7 +3,7 @@ package com.example;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.example.mapper.UserMapper;
 import com.example.pojo.User;
-import com.example.util.MailSenderUtil;
+import com.example.service.MailService;
 import lombok.extern.slf4j.Slf4j;
 
 import org.junit.jupiter.api.Test;
@@ -13,12 +13,10 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 
-import javax.mail.MessagingException;
-
 
 @SpringBootTest
 @Slf4j
-class Springboot03WebApplicationTests {
+class PetCollarWebApplicationTests {
     @Autowired
     JdbcTemplate jdbcTemplate;
 
@@ -44,17 +42,9 @@ class Springboot03WebApplicationTests {
     @Autowired
     JavaMailSenderImpl javaMailSender;
 
-    /**
-     * 普通邮件发送
-     */
-    @Test
-    public void sendSimpleMail() throws MessagingException {
-        String code = "没有验证码";
-        for(int i = 0; i < 5; ++i){
-            mailSenderUtil.sendEmail("1612682622@qq.com", code);
-        }
+    @Autowired
+    MailService mailService;
 
-    }
 
 
 }
