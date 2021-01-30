@@ -9,7 +9,7 @@ import java.util.Objects;
 /**
  * @author Lexin Huang
  */
-public class FormatTool {
+public class FormatUtil {
 
 
     public static AccountFormat solveAccountFormat(Account account){
