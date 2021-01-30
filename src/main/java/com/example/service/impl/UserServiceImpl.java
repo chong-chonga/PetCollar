@@ -31,9 +31,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     final
     StringRedisTemplate stringRedisTemplate;
 
-
     final
     UserMapper userMapper;
+
 
     public UserServiceImpl(StringRedisTemplate stringRedisTemplate, UserMapper userMapper) {
         this.stringRedisTemplate = stringRedisTemplate;
@@ -56,7 +56,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
 
-
+    /**
+     * 跨层交互时, 确保上一层传入的参数符合 当前的期望,
+     * 对于 controller 传入的参数进行必要的检查, 如不符合规定, 则即时抛出异常, 利于进行断言测试
+     * @param request 登录注册请求
+     * @param response 响应内容
+     * @param loginRegisterData 登录注册响应数据
+     * @param level 账号验证层级, 详情见 {@link AccountVerificationLevel}
+     */
     private void dispatchVerificationRequest(LoginRegisterRequest request,
                                              ReactiveResponse response,
                                              LoginRegisterData loginRegisterData,
@@ -78,6 +85,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
     }
 
+
     private void doLogin(LoginRegisterRequest request,
                          ReactiveResponse response,
                          LoginRegisterData loginRegisterData) {
@@ -89,8 +97,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             response.setContent(StatusCode.MISMATCH, loginRegisterData);
         }
 
-
     }
+
 
     /**
      * 此方法完成了 token 的生成, 并将其存储在 redis中, 有效时间为 1 小时
@@ -107,7 +115,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         loginRegisterData.setVal(token);
     }
 
-
+    /**
+     * 此方法已经过时, 由于此方法渗透到了 mapper 层的配置, 进行了耦合性的跨层使用
+     * 一旦此方法出现问题时, 将难以排查, 需要进行修改
+     * @param account 需要判断是否存在的账号
+     * @return 账号存在的布尔值
+     */
+    @Deprecated
     private boolean exist(Account account){
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq(true,"user_account", account.getUsername())
@@ -136,6 +150,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         queryWrapper.eq(true,"user_account", username);
         return !Objects.isNull(userMapper.selectOne(queryWrapper));
     }
+
 
     private void save(Account account){
         User user = new User();
