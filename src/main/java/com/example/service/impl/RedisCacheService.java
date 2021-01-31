@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
  * @author Lexin Huang
  */
 @Slf4j
-@Service
+@Service("redisCacheService")
 public class RedisCacheService implements CacheService {
 
     private final StringRedisTemplate stringRedisTemplate;
@@ -25,8 +25,27 @@ public class RedisCacheService implements CacheService {
     }
 
     @Override
-    public boolean exist(String k) {
-        return null != (stringRedisTemplate.opsForValue().get(k));
+    public boolean exist(Object k) {
+        return null != getObjectCache(k);
+    }
+
+    @Override
+    public String getStringCache(Object k) {
+        return stringRedisTemplate.opsForValue().get(k);
+    }
+
+    public Object getObjectCache(Object k){
+        return objectRedisTemplate.opsForValue().get(k);
+    }
+
+    @Override
+    public void saveCache(Object k, Object v) {
+        objectRedisTemplate.opsForValue().set(k, v);
+    }
+
+    @Override
+    public void saveCache(Object k, Object v, Long timeOut, TimeUnit timeUnit) {
+        objectRedisTemplate.opsForValue().set(k, v, timeOut, timeUnit);
     }
 
     @Override
