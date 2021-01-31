@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <style>
@@ -14,13 +14,17 @@
         #main{
             text-align: center;
         }
+        #username{
+            color: black;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
     <div id="main">
-        <p>亲爱的 <span id="username">[[${username}]]</span>会员, 您好!</p>
+        <p>亲爱的&nbsp;<span id="username">[[${username}]]&nbsp;</span>会员, 您好!</p>
         <br/>
-        <p>您本次操作的验证码为：<span id="verificationCode">[[${verificationCode}]]</span>请在返回输入框完成输入,以完成操作。 :<span id="unit">(有效期[[${effectiveTime}]] [[${timeUnit}]])</span></p>
+        <p>您本次操作的验证码为：<span id="verificationCode">[[${verificationCode}]]</span>请在返回输入框完成输入,以完成操作。 :<span id="unit">(有效期[[${timeOut}]] [[${timeUnit}]])</span></p>
         <br/><br/>
         <div id="warn">
             <p>注意：此操作可能会修改您的密码、登录邮箱或绑定手机。如非本人操作，请及时登录并修改密码以保证帐户安全</p>
