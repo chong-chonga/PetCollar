@@ -1,6 +1,7 @@
 package com.example.requrest;
 
 import com.example.pojo.Account;
+import com.example.pojo.AccountVerificationLevel;
 import lombok.*;
 
 import java.util.Objects;
@@ -16,12 +17,12 @@ public class AccountRequest {
     private String username;
     private String password;
     private String emailAddress;
-
+    private AccountVerificationLevel level;
     private Account account;
 
     public Account getAccount(){
         if(Objects.isNull(account)){
-            account = new Account(this.getUsername(), this.getPassword());
+            account = new Account(this.getUsername(), this.getPassword(), this.emailAddress);
         }
         return account;
     }
