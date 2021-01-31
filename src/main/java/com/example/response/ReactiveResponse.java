@@ -10,7 +10,7 @@ import static com.example.response.ReactiveResponse.StatusCode.*;
  * @since 2.0
  * 响应式消息的基类, 对于响应状态 code 和 msg 做出相应的调整
  * 对于 code 的设置, 将会自动匹配对应的 msg 且不允许手动设置 msg 的值
- * 只保留 data 的自定义能力, 且限制类型为 ReactiveData 如{@link AccountRequestData}
+ * 只保留 data 的自定义能力, 且限制类型为 ReactiveData 如{@link AccountVerificationRequestData}
  * 将data设置为保护类型, 使得子类可以直接赋值, 而不允许外界调用
  */
 @ToString
@@ -36,9 +36,14 @@ public class ReactiveResponse {
 
         public static final int USERNAME_HAS_REGISTERED = 414;
 
-        public static final int NEW_PASSWORD_FORMAT_WRONG = 415;
+        public static final int USER_NOT_EXISTS = 415;
 
-        public static final int EMAIL_ADDRESS_NOT_SUPPORTED = 416;
+        public static final int TOKEN_NOT_EXISTS = 416;
+
+        public static final int NEW_PASSWORD_FORMAT_WRONG = 417;
+
+        public static final int EMAIL_ADDRESS_NOT_SUPPORTED = 418;
+
 
         public static final int Server_ERROR = 500;
 
@@ -58,6 +63,10 @@ public class ReactiveResponse {
                     return "用户名或密码错误!";
                 case USERNAME_HAS_REGISTERED:
                     return "用户名已被注册!";
+                case USER_NOT_EXISTS:
+                    return "用户不存在!";
+                case TOKEN_NOT_EXISTS:
+                    return "登录已过期!";
                 case NEW_PASSWORD_FORMAT_WRONG:
                     return "新密码格式错误!";
                 case EMAIL_ADDRESS_NOT_SUPPORTED:
