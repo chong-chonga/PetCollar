@@ -2,25 +2,27 @@ package com.example.service.impl;
 
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.mapper.UserMapper;
-import com.example.pojo.Account;
-import com.example.pojo.AccountFormat;
-import com.example.pojo.AccountVerificationLevel;
+import com.example.pojo.AccountInfo;
 import com.example.pojo.User;
-import com.example.requrest.AccountRequest;
-import com.example.response.AccountRequestData;
+import com.example.request.AccountVerificationRequest;
+import com.example.request.OperationRequest;
+import com.example.request.OperationType;
+import com.example.response.AccountVerificationRequestData;
+import com.example.response.OperationData;
 import com.example.response.ReactiveResponse;
 import com.example.response.ReactiveResponse.StatusCode;
 import com.example.service.CacheService;
 import com.example.service.MailService;
 import com.example.service.UserService;
-import com.example.util.FormatUtil;
+import com.example.pojo.AccountInfoFormat;
 import com.example.util.NoSuchAccountVerificationTypeException;
 import com.example.util.VerificationCodeGenerator;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.mail.MessagingException;
@@ -33,8 +35,6 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Service
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
-    private final StringRedisTemplate stringRedisTemplate;
-
     private final UserMapper userMapper;
 
     private final MailService mailService;
@@ -42,11 +42,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     private final CacheService cacheService;
 
 
-    public UserServiceImpl(StringRedisTemplate stringRedisTemplate,
-                           UserMapper userMapper,
+    public UserServiceImpl(UserMapper userMapper,
                            @Qualifier("simpleMailService")MailService mailService,
                            @Qualifier("redisCacheService")CacheService cacheService) {
-        this.stringRedisTemplate = stringRedisTemplate;
         this.userMapper = userMapper;
         this.mailService = mailService;
         this.cacheService = cacheService;
@@ -54,15 +52,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
 
     @Override
-    public ReactiveResponse getAccountVerificationResponse(AccountRequest request,
-                                                           AccountVerificationLevel level) {
-        AccountFormat accountFormat = FormatUtil.solveAccountFormat(request.getAccount());
+    public ReactiveResponse getAccountVerificationResponse(AccountVerificationRequest request) {
+        AccountInfoFormat accountInfoFormat = AccountInfoFormat.solveAccountInfoFormat(request.getAccountInfo());
         ReactiveResponse response = new ReactiveResponse();
-        AccountRequestData accountRequestData = new AccountRequestData();
-        if(accountFormat.isCorrect() || level == AccountVerificationLevel.RETRIEVE_PASSWORD){
-            dispatchVerificationRequest(request, response, accountRequestData, level);
+        AccountVerificationRequestData accountVerificationRequestData = new AccountVerificationRequestData();
+        if(accountInfoFormat.isCorrect()){
+            dispatchVerificationRequest(request, response, accountVerificationRequestData);
         }else{
-            response.setContent(accountFormat.getStatusCode(), accountRequestData);
+            response.setContent(accountInfoFormat.getStatusCode(), accountVerificationRequestData);
         }
         return response;
     }
@@ -73,43 +70,41 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * 对于 controller 传入的参数进行必要的检查, 如不符合规定, 则即时抛出异常, 利于进行断言测试
      * @param request 登录注册请求
      * @param response 响应内容
-     * @param accountRequestData 登录注册响应数据
-     * @param level 账号验证层级, 详情见 {@link AccountVerificationLevel}
+     * @param accountVerificationRequestData 登录注册响应数据
      */
-    private void dispatchVerificationRequest(AccountRequest request,
+    private void dispatchVerificationRequest(AccountVerificationRequest request,
                                              ReactiveResponse response,
-                                             AccountRequestData accountRequestData,
-                                             AccountVerificationLevel level) {
+                                             AccountVerificationRequestData accountVerificationRequestData) {
         try{
-            switch (level){
+            switch (request.getInfoType()){
                 case LOGIN:
-                    doLogin(request, response, accountRequestData);
+                    doLogin(request, response, accountVerificationRequestData);
                     break;
                 case REGISTER:
-                    doRegister(request, response, accountRequestData);
+                    doRegister(request, response, accountVerificationRequestData);
                     break;
                 case RETRIEVE_PASSWORD:
-                    doRetrievePassword(request, response, accountRequestData);
+                    doRetrievePassword(request, response, accountVerificationRequestData);
                     break;
                 default:
                     throw new NoSuchAccountVerificationTypeException("错误的账号验证请求");
             }
         }catch (NoSuchAccountVerificationTypeException e){
             log.error(e.getMessage());
-            response.setContent(StatusCode.Server_ERROR, accountRequestData);
+            response.setContent(StatusCode.Server_ERROR, accountVerificationRequestData);
         }
     }
 
 
-    private void doLogin(AccountRequest request,
+    private void doLogin(AccountVerificationRequest request,
                          ReactiveResponse response,
-                         AccountRequestData accountRequestData) {
-        Account accountProvided = request.getAccount();
-        if(exist(accountProvided)){
-            configureVerificationData(accountRequestData, accountProvided);
-            response.setContent(StatusCode.CORRECT, accountRequestData);
+                         AccountVerificationRequestData accountVerificationRequestData) {
+        AccountInfo accountInfoProvided = request.getAccountInfo();
+        if(exist(accountInfoProvided)){
+            configureVerificationData(accountVerificationRequestData, accountInfoProvided);
+            response.setContent(StatusCode.CORRECT, accountVerificationRequestData);
         }else{
-            response.setContent(StatusCode.MISMATCH, accountRequestData);
+            response.setContent(StatusCode.MISMATCH, accountVerificationRequestData);
         }
 
     }
@@ -118,51 +113,50 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     /**
      * 此方法完成了 token 的生成, 并将其存储在 redis中, 有效时间为 7 天
      * 同一账号在7天内登录, 只会获得同一个token
-     * @param accountRequestData 登录注册响应数据
-     * @param accountProvided 提供的账号信息
+     * @param accountVerificationRequestData 登录注册响应数据
+     * @param accountInfoProvided 提供的账号信息
      */
-    private void configureVerificationData(AccountRequestData accountRequestData, Account accountProvided) {
-        String username = accountProvided.getUsername();
-        if (cacheService.exist(username)){
-            String token = stringRedisTemplate.opsForValue().get(username);
-            accountRequestData.setToken(token);
-            assert token != null;
+    private void configureVerificationData(AccountVerificationRequestData accountVerificationRequestData, AccountInfo accountInfoProvided) {
+        String username = accountInfoProvided.getUsername();
+        String token = cacheService.getStringCache(username);
+        if (!Strings.isEmpty(token)){
+            accountVerificationRequestData.setToken(token);
             //延长有效期
-            cacheService.saveCache(token, accountProvided.getUsername(), 7L, TimeUnit.DAYS);
-            cacheService.saveCache(accountProvided.getUsername(),token, 7L, TimeUnit.DAYS);
+            cacheService.saveCache(token, accountInfoProvided.getUsername(), 7L, TimeUnit.DAYS);
+            cacheService.saveCache(accountInfoProvided.getUsername(),token, 7L, TimeUnit.DAYS);
         }else {
-            String token = UUID.randomUUID().toString();
-            cacheService.saveCache(token, accountProvided.getUsername(), 7L, TimeUnit.DAYS);
-            cacheService.saveCache(accountProvided.getUsername(),token, 7L, TimeUnit.DAYS);
-            accountRequestData.setToken(token);
+            token = UUID.randomUUID().toString();
+            cacheService.saveCache(token, accountInfoProvided.getUsername(), 7L, TimeUnit.DAYS);
+            cacheService.saveCache(accountInfoProvided.getUsername(),token, 7L, TimeUnit.DAYS);
+            accountVerificationRequestData.setToken(token);
         }
     }
 
 
     /**
-     * 用于查询对应 account 是否存在
-     * @param account 需要判断是否存在的账号
+     * 用于查询对应 accountInfo 是否存在
+     * @param accountInfo 需要判断是否存在的账号
      * @return 账号存在的布尔值
      */
-    private boolean exist(Account account){
+    private boolean exist(AccountInfo accountInfo){
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq(true,"user_account", account.getUsername())
-                    .eq(true,"user_password", account.getPassword());
+        queryWrapper.eq(true,"user_username", accountInfo.getUsername())
+                    .eq(true,"user_password", accountInfo.getPassword());
         return !Objects.isNull(userMapper.selectOne(queryWrapper));
     }
 
 
-    private void doRegister(AccountRequest request,
+    private void doRegister(AccountVerificationRequest request,
                             ReactiveResponse response,
-                            AccountRequestData accountRequestData) {
-        String usernameProvided = request.getAccount().getUsername();
+                            AccountVerificationRequestData accountVerificationRequestData) {
+        String usernameProvided = request.getAccountInfo().getUsername();
 
         if(exist(usernameProvided)){
-            response.setContent(StatusCode.USERNAME_HAS_REGISTERED, accountRequestData);
+            response.setContent(StatusCode.USERNAME_HAS_REGISTERED, accountVerificationRequestData);
         }else{
-            save(request.getAccount());
-            configureVerificationData(accountRequestData, request.getAccount());
-            response.setContent(StatusCode.CORRECT, accountRequestData);
+            save(request.getAccountInfo());
+            configureVerificationData(accountVerificationRequestData, request.getAccountInfo());
+            response.setContent(StatusCode.CORRECT, accountVerificationRequestData);
         }
     }
 
@@ -175,37 +169,70 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
 
-    private void save(Account account){
+    private void save(AccountInfo accountInfo){
         User user = new User();
-        user.setAccount(account.getUsername());
-        user.setPassword(account.getPassword());
-        user.setEmailAddress(account.getEmailAddress());
+        user.setUsername(accountInfo.getUsername());
+        user.setPassword(accountInfo.getPassword());
+        user.setEmailAddress(accountInfo.getEmailAddress());
         save(user);
     }
 
+    private User getByUsername(String username){
+        QueryWrapper<User> userQueryWrapper = new QueryWrapper<>();
+        userQueryWrapper.eq("user_username", username);
+        return userMapper.selectOne(userQueryWrapper);
+    }
 
-    private void doRetrievePassword(AccountRequest request,
+
+    private void doRetrievePassword(AccountVerificationRequest request,
                                     ReactiveResponse response,
-                                    AccountRequestData accountRequestData) {
+                                    AccountVerificationRequestData accountVerificationRequestData) {
         if(exist(request.getUsername())){
+            User user = getByUsername(request.getUsername());
             String verificationCode = VerificationCodeGenerator.generate(8);
-            cacheService.saveCache(request.getUsername(), verificationCode, 5, TimeUnit.MINUTES);
+            cacheService.saveCache(request.getUsername(), verificationCode, 5L, TimeUnit.MINUTES);
             try {
-                sendEmail(request.getAccount(), verificationCode);
-                accountRequestData.setVerificationCode(verificationCode);
-                response.setContent(StatusCode.CORRECT, accountRequestData);
+                mailService.sendVerificationCodeMail(user, verificationCode, 5L);
+                accountVerificationRequestData.setVerificationCode(verificationCode);
+                response.setContent(StatusCode.CORRECT, accountVerificationRequestData);
             } catch (MessagingException e) {
                 log.error(e.getMessage());
-                response.setContent(StatusCode.Server_ERROR, accountRequestData);
+                response.setContent(StatusCode.Server_ERROR, accountVerificationRequestData);
             }
 
         }else{
-            response.setContent(StatusCode.USERNAME_NOT_REGISTERED, accountRequestData);
+            response.setContent(StatusCode.USER_NOT_EXISTS, accountVerificationRequestData);
         }
     }
 
-    private void sendEmail(Account accountInfo, String verificationCode) throws MessagingException {
-        mailService.sendVerificationCodeMail(accountInfo, verificationCode, 5, TimeUnit.MINUTES);
+
+    @Override
+    public ReactiveResponse getOperationResponse(OperationRequest request) {
+        ReactiveResponse response = new ReactiveResponse();
+        OperationData operationData = new OperationData();
+        String token = request.getToken();
+        if(cacheService.exist(token)){
+            cacheService.saveCache(token, request.getUsername(), 7L, TimeUnit.DAYS);
+            cacheService.saveCache(request.getUsername(), token, 7L, TimeUnit.DAYS);
+            doOperation(request, response, operationData);
+            response.setContent(StatusCode.CORRECT, operationData);
+        }else{
+            response.setContent(StatusCode.TOKEN_NOT_EXISTS, operationData);
+        }
+        return response;
+    }
+
+    private void doOperation(OperationRequest request,
+                             ReactiveResponse response,
+                             OperationData operationData) {
+        if(OperationType.MODIFY_INFOMATION == request.getOperationType()){
+            User user = getByUsername(cacheService.getStringCache(request.getToken()));
+            user.setEmailAddress(request.getEmailAddress());
+            user.setPassword(request.getNewPassword());
+            UpdateWrapper<User> updateWrapper = new UpdateWrapper<>();
+            updateWrapper.eq("user_id", user.getUserId());
+            update(user, updateWrapper);
+        }
     }
 
 }

@@ -22,10 +22,12 @@ public class User {
     private Integer userId;
     @TableField(value = "user_portrait_path")
     private String userPortraitPath;
-    @TableField(value = "user_account")
-    private String account;
+    @TableField(value = "user_username")
+    private String username;
     @TableField(value = "user_password")
     private String password;
+    @TableField(value = "user_email_address")
+    private String emailAddress;
     @TableField(value = "user_introduction")
     private String userIntroduction;
 

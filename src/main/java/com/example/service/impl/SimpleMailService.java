@@ -39,7 +39,7 @@ public class SimpleMailService implements MailService {
         MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage, true);
         mimeMessageHelper.setSubject("邮箱验证");
         mimeMessageHelper.setFrom(senderMailAddress);
-        String emailPage = getVerificationMailPage(user.getAccount(), verificationCode, timeOut, "分钟");
+        String emailPage = getVerificationMailPage(user.getUsername(), verificationCode, timeOut, "分钟");
         mimeMessageHelper.setText(emailPage, true);
         mimeMessageHelper.setTo(user.getEmailAddress());
         javaMailSender.send(mimeMessage);
