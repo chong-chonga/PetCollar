@@ -24,8 +24,7 @@ public class WebMvcConfigure implements WebMvcConfigurer {
         registry.addInterceptor(new LoginInterceptor())
                 .addPathPatterns("/**")
                 .excludePathPatterns("/login", "/", "/user/login/**", "/css/**", "/js/**",
-                        "/images/**", "/fonts/**", "/user/register/**", "/mobile_platform/user/login",
-                        "/mobile_platform/user/register/**");
+                        "/images/**", "/fonts/**", "/user/register/**", "/mobile_platform/**");
     }
 
 }
