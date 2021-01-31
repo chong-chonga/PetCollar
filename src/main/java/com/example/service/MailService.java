@@ -1,14 +1,17 @@
 package com.example.service;
 
+import com.example.pojo.User;
+
+import javax.mail.MessagingException;
+
 /**
  * @author Lexin Huang
  * @since 2.0
  */
 public interface MailService {
-    void sendCheckCodeMail(String receiverAddress, String content);
+
+    void sendVerificationCodeMail(User user, String verificationCode, Long timeOut) throws MessagingException;
 
     void sendTextMail(String receiverAddress, String subject, String content);
-
-    void sendHtmlMail(String receiverAddress, String subject, String content);
 
 }

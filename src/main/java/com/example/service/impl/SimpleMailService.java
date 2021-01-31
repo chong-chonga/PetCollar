@@ -1,7 +1,6 @@
 package com.example.service.impl;
 
-import com.example.pojo.Account;
-import com.example.requrest.AccountRequest;
+import com.example.pojo.User;
 import com.example.service.MailService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,7 +12,6 @@ import org.thymeleaf.context.Context;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author Lexin Huang
@@ -36,15 +34,14 @@ public class SimpleMailService implements MailService {
 
 
     @Override
-    public void sendVerificationCodeMail(Account accountInfo, String verificationCode,
-                                         Integer timeOut, TimeUnit timeUnit) throws MessagingException {
+    public void sendVerificationCodeMail(User user, String verificationCode, Long timeOut) throws MessagingException {
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();
         MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage, true);
         mimeMessageHelper.setSubject("邮箱验证");
         mimeMessageHelper.setFrom(senderMailAddress);
-        String emailPage = getVerificationMailPage(accountInfo.getUsername(), verificationCode, timeOut, "分钟");
+        String emailPage = getVerificationMailPage(user.getAccount(), verificationCode, timeOut, "分钟");
         mimeMessageHelper.setText(emailPage, true);
-        mimeMessageHelper.setTo(accountInfo.getEmailAddress());
+        mimeMessageHelper.setTo(user.getEmailAddress());
         javaMailSender.send(mimeMessage);
     }
 
@@ -55,7 +52,7 @@ public class SimpleMailService implements MailService {
 
 
     private String getVerificationMailPage(String username,       String verificationCode,
-                                           Integer timeOut, String timeUnit) {
+                                           Long timeOut, String timeUnit) {
         Context context = new Context();
         context.setVariable("username", username);
         context.setVariable("verificationCode", verificationCode);
