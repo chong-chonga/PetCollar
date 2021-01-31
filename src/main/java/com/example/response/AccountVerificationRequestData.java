@@ -9,12 +9,9 @@ import lombok.*;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
 @ToString
-public class LoginRegisterData extends ReactiveData<String> {
-
-    public void setVal(String token){
-        super.setVal(token);
-    }
+public class AccountVerificationRequestData extends ReactiveData{
+    private String token;
+    private String verificationCode;
 
 }
