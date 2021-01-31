@@ -1,8 +1,6 @@
-package com.example.util;
+package com.example.pojo;
 
-import com.example.pojo.Account;
-import com.example.pojo.AccountVerificationLevel;
-import com.example.requrest.AccountRequest;
+import com.example.request.AccountInfoType;
 import com.example.response.ReactiveResponse.StatusCode;
 import lombok.Data;
 import lombok.ToString;
@@ -14,11 +12,11 @@ import org.apache.logging.log4j.util.Strings;
  */
 @Data
 @ToString
-public class AccountRequestFormat {
+public class AccountInfoFormat {
 
     private Integer formatVal;
 
-    private AccountRequestFormat(){
+    private AccountInfoFormat(){
         this.formatVal = StatusCode.CORRECT;
     }
 
@@ -26,30 +24,32 @@ public class AccountRequestFormat {
         return this.formatVal == StatusCode.CORRECT;
     }
 
-
     public Integer getStatusCode() {
         return formatVal;
     }
 
-    public static AccountRequestFormat solveAccountRequestFormat(AccountRequest request) {
-        AccountRequestFormat accountRequestFormat = new AccountRequestFormat();
-        if(AccountVerificationLevel.RETRIEVE_PASSWORD != request.getLevel()
-                && usernameFormatWrong(request.getUsername())){
-            accountRequestFormat.formatVal = StatusCode.USERNAME_FORMAT_WRONG;
+    public static AccountInfoFormat solveAccountInfoFormat(AccountInfo accountInfo) {
+        AccountInfoFormat accountInfoFormat = new AccountInfoFormat();
+        if(AccountInfoType.MODIFY_INFORMATION != accountInfo.getInfoType()
+                && usernameFormatWrong(accountInfo.getUsername())){
+            accountInfoFormat.formatVal = StatusCode.USERNAME_FORMAT_WRONG;
         }
-        else if(AccountVerificationLevel.RETRIEVE_PASSWORD != request.getLevel()
-                && passwordFormatWrong(request.getPassword())){
-            accountRequestFormat.formatVal = StatusCode.PASSWORD_FORMAT_WRONG;
+        else if(AccountInfoType.RETRIEVE_PASSWORD != accountInfo.getInfoType()
+                && passwordFormatWrong(accountInfo.getPassword())){
+            accountInfoFormat.formatVal = StatusCode.PASSWORD_FORMAT_WRONG;
         }
-        else if(AccountVerificationLevel.MODIFY_INFORMATION == request.getLevel()){
-            if(passwordFormatWrong(request.getNewPassword())){
-               accountRequestFormat.formatVal = StatusCode.NEW_PASSWORD_FORMAT_WRONG;
+        else if(AccountInfoType.REGISTER == accountInfo.getInfoType()
+                || AccountInfoType.MODIFY_INFORMATION == accountInfo.getInfoType()){
+            if(emailAddressFormatWrong(accountInfo.getEmailAddress())){
+                accountInfoFormat.formatVal = StatusCode.EMAIL_ADDRESS_NOT_SUPPORTED;
             }
-            else if(notSupportFormatOf(request.getEmailAddress())){
-                accountRequestFormat.formatVal = StatusCode.EMAIL_ADDRESS_NOT_SUPPORTED;
+            else if(AccountInfoType.MODIFY_INFORMATION == accountInfo.getInfoType()
+                    && passwordFormatWrong(accountInfo.getNewPassword())){
+               accountInfoFormat.formatVal = StatusCode.NEW_PASSWORD_FORMAT_WRONG;
             }
+
         }
-        return accountRequestFormat;
+        return accountInfoFormat;
     }
 
 
@@ -78,7 +78,8 @@ public class AccountRequestFormat {
         return !testPassword.matches(regStr);
     }
 
-    private static boolean notSupportFormatOf(String emailAddress){
+
+    private static boolean emailAddressFormatWrong(String emailAddress){
         return Strings.isEmpty(emailAddress) ||
                         (!emailAddress.endsWith("@126.com") &&
                         !emailAddress.endsWith("@163.com") &&
