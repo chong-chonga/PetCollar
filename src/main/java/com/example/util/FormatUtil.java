@@ -1,7 +1,7 @@
 package com.example.util;
 
 import com.example.pojo.Account;
-import com.example.pojo.AccountFormat;
+import com.example.pojo.AccountRequestFormat;
 
 import java.util.Objects;
 
@@ -12,24 +12,24 @@ import java.util.Objects;
 public class FormatUtil {
 
 
-    public static AccountFormat solveAccountFormat(Account account){
-        AccountFormat accountFormat = new AccountFormat();
+    public static AccountRequestFormat solveAccountFormat(Account account){
+        AccountRequestFormat accountRequestFormat = new AccountRequestFormat();
         if(Objects.isNull(account)){
             throw new RuntimeException("解析账号格式出错!");
         } else{
             Integer val = solveValue(account);
-            accountFormat.setFormatVal(val);
-            return accountFormat;
+            accountRequestFormat.setFormatVal(val);
+            return accountRequestFormat;
         }
     }
 
     private static Integer solveValue(Account account){
         if(usernameFormatWrong(account.getUsername())){
-            return AccountFormat.USERNAME_FORMAT_WRONG;
+            return AccountRequestFormat.USERNAME_FORMAT_WRONG;
         } else if(passwordFormatWrong(account.getPassword())){
-            return AccountFormat.PASSWORD_FORMAT_WRONG;
+            return AccountRequestFormat.PASSWORD_FORMAT_WRONG;
         } else{
-            return AccountFormat.CORRECT;
+            return AccountRequestFormat.CORRECT;
         }
     }
 

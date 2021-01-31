@@ -13,7 +13,7 @@ import lombok.ToString;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-public class AccountFormat {
+public class AccountRequestFormat {
     public static final int CORRECT = 1;
 
     public static final int USERNAME_FORMAT_WRONG = 2;
