@@ -123,17 +123,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      */
     private void configureVerificationData(AccountRequestData accountRequestData, Account accountProvided) {
         String username = accountProvided.getUsername();
-        if (stringRedisTemplate.opsForValue().get(username)!=null){
+        if (cacheService.exist(username)){
             String token = stringRedisTemplate.opsForValue().get(username);
             accountRequestData.setToken(token);
             assert token != null;
             //延长有效期
-            saveInRedis(token, accountProvided.getUsername(), 7L, TimeUnit.DAYS);
-            saveInRedis(accountProvided.getUsername(),token, 7L, TimeUnit.DAYS);
+            cacheService.saveCache(token, accountProvided.getUsername(), 7L, TimeUnit.DAYS);
+            cacheService.saveCache(accountProvided.getUsername(),token, 7L, TimeUnit.DAYS);
         }else {
             String token = UUID.randomUUID().toString();
-            saveInRedis(token, accountProvided.getUsername(), 7L, TimeUnit.DAYS);
-            saveInRedis(accountProvided.getUsername(),token, 7L, TimeUnit.DAYS);
+            cacheService.saveCache(token, accountProvided.getUsername(), 7L, TimeUnit.DAYS);
+            cacheService.saveCache(accountProvided.getUsername(),token, 7L, TimeUnit.DAYS);
             accountRequestData.setToken(token);
         }
     }
@@ -189,7 +189,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                                     AccountRequestData accountRequestData) {
         if(exist(request.getUsername())){
             String verificationCode = VerificationCodeGenerator.generate(8);
-            saveInRedis(request.getUsername(), verificationCode, 5, TimeUnit.MINUTES);
+            cacheService.saveCache(request.getUsername(), verificationCode, 5, TimeUnit.MINUTES);
             try {
                 sendEmail(request.getAccount(), verificationCode);
                 accountRequestData.setVerificationCode(verificationCode);
@@ -202,10 +202,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }else{
             response.setContent(StatusCode.USERNAME_NOT_REGISTERED, accountRequestData);
         }
-    }
-
-    private void saveInRedis(String K, String V, Long timeout, TimeUnit timeUnit) {
-        stringRedisTemplate.opsForValue().set(K, V, timeout, timeUnit);
     }
 
     private void sendEmail(Account accountInfo, String verificationCode) throws MessagingException {
