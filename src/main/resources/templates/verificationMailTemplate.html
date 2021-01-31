@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <title>宠物科技验证码邮件</title>
     <meta charset="UTF-8">
     <style>
-        #verificationCode, #unit,#name{
+        #verificationCode, #unit{
             color: #1876b5;
             font-size: large;
             font-weight: bolder;
@@ -19,12 +20,13 @@
             font-weight: bold;
         }
     </style>
+
 </head>
 <body>
     <div id="main">
         <p>亲爱的&nbsp;<span id="username">[[${username}]]&nbsp;</span>会员, 您好!</p>
         <br/>
-        <p>您本次操作的验证码为：<span id="verificationCode">[[${verificationCode}]]</span>请在返回输入框完成输入,以完成操作。 :<span id="unit">(有效期[[${timeOut}]] [[${timeUnit}]])</span></p>
+        <p>您本次操作的验证码为：&nbsp;<span id="verificationCode">[[${verificationCode}]]&nbsp;</span>请在返回输入框完成输入,以完成操作。 :<span id="unit">(有效期[[${timeOut}]] [[${timeUnit}]])</span></p>
         <br/><br/>
         <div id="warn">
             <p>注意：此操作可能会修改您的密码、登录邮箱或绑定手机。如非本人操作，请及时登录并修改密码以保证帐户安全</p>
