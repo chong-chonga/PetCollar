@@ -5,6 +5,7 @@ import com.example.requrest.AccountRequest;
 import com.example.response.ReactiveResponse;
 import com.example.service.UserService;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -16,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
 
     @RestController
-    @RequestMapping("/mobile_platform/user")
+    @RequestMapping("/mobile_platform/user/account_request")
     public static class AccountController {
         final
         UserService userService;
@@ -27,21 +28,29 @@ public class UserController {
 
 
         @PostMapping("/login")
-        public ReactiveResponse login(AccountRequest request) {
-            return userService.getAccountVerificationResponse(request,
-                    AccountVerificationLevel.LOGIN);
+        public ReactiveResponse login(@RequestBody AccountRequest request) {
+            request.setLevel(AccountVerificationLevel.LOGIN);
+            return userService.getAccountVerificationResponse(request);
         }
 
         @PostMapping("/register")
-        public ReactiveResponse register(AccountRequest request) {
+        public ReactiveResponse register(@RequestBody AccountRequest request) {
+            request.setLevel(AccountVerificationLevel.REGISTER);
             return userService.getAccountVerificationResponse(request,
                     AccountVerificationLevel.REGISTER);
         }
 
         @PostMapping("/retrieve_password")
-        public ReactiveResponse retrievePassword(AccountRequest request) {
+        public ReactiveResponse retrievePassword(@RequestBody AccountRequest request) {
+            request.setLevel(AccountVerificationLevel.RETRIEVE_PASSWORD);
             return userService.getAccountVerificationResponse(request,
                     AccountVerificationLevel.RETRIEVE_PASSWORD);
+        }
+
+        @PostMapping("/modify_info")
+        public ReactiveResponse modifyInfo(@RequestBody AccountRequest request){
+            request.setLevel(AccountVerificationLevel.MODIFY_INFORMATION);
+            return userService.getAccountVerificationResponse(request);
         }
     }
 }
