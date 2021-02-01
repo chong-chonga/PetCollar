@@ -1,5 +1,5 @@
 package com.example.request;
 
-public enum OperationType {
+public enum OperationRequestType {
     MODIFY_INFOMATION
 }

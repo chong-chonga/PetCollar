@@ -12,6 +12,6 @@ import lombok.ToString;
 @Data
 @NoArgsConstructor
 @ToString
-public class OperationData extends ReactiveData{
-
+public class OperationRequestData extends ReactiveData{
+    private String name;
 }
