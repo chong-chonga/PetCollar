@@ -26,7 +26,7 @@ public class RedisCacheService implements CacheService {
 
     @Override
     public boolean exist(Object k) {
-        return null != getObjectCache(k);
+        return null != getStringCache(k);
     }
 
     @Override
