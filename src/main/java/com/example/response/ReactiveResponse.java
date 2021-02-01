@@ -44,6 +44,7 @@ public class ReactiveResponse {
 
         public static final int EMAIL_ADDRESS_NOT_SUPPORTED = 418;
 
+        public static final int PASSWORD_WRONG = 419;
 
         public static final int Server_ERROR = 500;
 
@@ -71,6 +72,8 @@ public class ReactiveResponse {
                     return "新密码格式错误!";
                 case EMAIL_ADDRESS_NOT_SUPPORTED:
                     return "不支持的邮箱类型!";
+                case PASSWORD_WRONG:
+                    return "密码错误!";
                 case Server_ERROR:
                     return "服务器控制器错误!";
                 default:
