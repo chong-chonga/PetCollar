@@ -1,6 +1,5 @@
 package com.example.request;
 
-import com.example.pojo.AccountInfo;
 import lombok.*;
 
 
@@ -11,25 +10,14 @@ import lombok.*;
 @ToString
 @AllArgsConstructor
 @NoArgsConstructor
-public class AccountVerificationRequest{
-    protected String username;
+public class AccountVerificationRequest {
 
-    protected String password;
+    private String username;
 
-    protected String emailAddress;
+    private String password;
 
-    private AccountInfo accountInfo;
+    private String emailAddress;
 
-    private AccountInfoType infoType;
+    private AccountVerificationRequestType requestType;
 
-    public AccountInfo getAccountInfo() {
-        if (null == this.accountInfo) {
-            accountInfo = new AccountInfo();
-            accountInfo.setUsername(username);
-            accountInfo.setPassword(password);
-            accountInfo.setEmailAddress(emailAddress);
-            accountInfo.setInfoType(infoType);
-        }
-        return accountInfo;
-    }
 }
