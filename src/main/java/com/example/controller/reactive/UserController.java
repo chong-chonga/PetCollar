@@ -1,9 +1,9 @@
 package com.example.controller.reactive;
 
 import com.example.request.AccountVerificationRequest;
-import com.example.request.AccountInfoType;
+import com.example.request.AccountVerificationRequestType;
 import com.example.request.OperationRequest;
-import com.example.request.OperationType;
+import com.example.request.OperationRequestType;
 import com.example.response.ReactiveResponse;
 import com.example.service.UserService;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -30,20 +30,25 @@ public class UserController {
 
         @PostMapping("/login")
         public ReactiveResponse login(@RequestBody AccountVerificationRequest request) {
-            request.setInfoType(AccountInfoType.LOGIN);
+            request.setRequestType(AccountVerificationRequestType.LOGIN);
             return userService.getAccountVerificationResponse(request);
         }
 
         @PostMapping("/register")
         public ReactiveResponse register(@RequestBody AccountVerificationRequest request) {
-            request.setInfoType(AccountInfoType.REGISTER);
+            request.setRequestType(AccountVerificationRequestType.REGISTER);
             return userService.getAccountVerificationResponse(request);
         }
 
-        @PostMapping("/retrieve_password")
-        public ReactiveResponse retrievePassword(@RequestBody AccountVerificationRequest request) {
-            request.setInfoType(AccountInfoType.RETRIEVE_PASSWORD);
+        @PostMapping("/retrieve_password/email_check")
+        public ReactiveResponse emailCheck(@RequestBody AccountVerificationRequest request) {
+            request.setRequestType(AccountVerificationRequestType.RETRIEVE_PASSWORD);
             return userService.getAccountVerificationResponse(request);
+        }
+
+        @PostMapping("/retrieve_password/submit_check_code")
+        public ReactiveResponse submitCheckCode(@RequestBody AccountVerificationRequest request){
+            return null;
         }
 
     }
@@ -52,9 +57,9 @@ public class UserController {
     @RequestMapping("/mobile_platform/user/operation")
     public class OperationRequestController {
 
-        @PostMapping("/modify_info")
+        @PostMapping("/edit/self_info")
         public ReactiveResponse modifyInfo(@RequestBody OperationRequest request){
-            request.setOperationType(OperationType.MODIFY_INFOMATION);
+            request.setOperationRequestType(OperationRequestType.MODIFY_INFORMATION);
             return userService.getOperationResponse(request);
         }
     }
