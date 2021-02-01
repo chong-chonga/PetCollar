@@ -1,5 +1,6 @@
 package com.example.response;
 
+import com.example.pojo.User;
 import lombok.*;
 
 /**
@@ -12,6 +13,7 @@ import lombok.*;
 @ToString
 public class AccountVerificationRequestData extends ReactiveData{
     private String token;
+    private User user;
     private String verificationCode;
 
 }
