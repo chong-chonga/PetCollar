@@ -1,5 +1,6 @@
 package com.example.response;
 
+import com.example.pojo.User;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -13,5 +14,6 @@ import lombok.ToString;
 @NoArgsConstructor
 @ToString
 public class OperationRequestData extends ReactiveData{
-    private String name;
+    private User user;
+    private String token;
 }
