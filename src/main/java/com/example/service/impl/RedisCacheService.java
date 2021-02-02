@@ -19,37 +19,63 @@ public class RedisCacheService implements CacheService {
 
     private final RedisTemplate<Object, Object> objectRedisTemplate;
 
+
     public RedisCacheService(StringRedisTemplate stringRedisTemplate, RedisTemplate<Object, Object> objectRedisTemplate) {
         this.stringRedisTemplate = stringRedisTemplate;
         this.objectRedisTemplate = objectRedisTemplate;
     }
+
+
 
     @Override
     public boolean exist(Object k) {
         return null != getStringCache(k);
     }
 
+
     @Override
     public String getStringCache(Object k) {
         return stringRedisTemplate.opsForValue().get(k);
     }
 
+
     public Object getObjectCache(Object k){
         return objectRedisTemplate.opsForValue().get(k);
     }
 
-    @Override
-    public void saveStringCache(Object k, Object v) {
-        objectRedisTemplate.opsForValue().set(k, v);
-    }
 
     @Override
-    public void saveStringCache(Object k, Object v, Long timeOut, TimeUnit timeUnit) {
-        objectRedisTemplate.opsForValue().set(k, v, timeOut, timeUnit);
+    public void saveStringCache(String k, String v) {
+        stringRedisTemplate.opsForValue().set(k, v);
     }
+
 
     @Override
     public void saveStringCache(String k, String v, Long timeOut, TimeUnit timeUnit) {
         stringRedisTemplate.opsForValue().set(k, v, timeOut, timeUnit);
+    }
+
+
+    @Override
+    public void saveObjectCache(Object k, Object v) {
+        objectRedisTemplate.opsForValue().set(k, v);
+    }
+
+
+    @Override
+    public void saveObjectCache(Object k, Object v, Long timeOut, TimeUnit timeUnit) {
+        objectRedisTemplate.opsForValue().set(k, v, timeOut, timeUnit);
+    }
+
+
+    @Override
+    public void removeStringKey(String k) {
+        stringRedisTemplate.delete(k);
+    }
+
+
+    @Override
+    public void removeObjectKey(Object o) {
+        objectRedisTemplate.delete(o);
     }
 }
