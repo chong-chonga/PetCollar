@@ -6,6 +6,7 @@ import com.example.request.OperationRequest;
 import com.example.request.OperationRequestType;
 import com.example.response.ReactiveResponse;
 import com.example.service.UserService;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,12 +18,21 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/mobile_platform/user")
 public class UserController {
-    final
-    UserService userService;
 
-    public UserController(UserService userService) {
-        this.userService = userService;
+    private final
+    UserService userAccountVerificationService;
+
+    private final
+    UserService userOperationService;
+
+
+    public UserController(@Qualifier("userAccountVerificationService") UserService userAccountVerificationService,
+                          @Qualifier("userOperationService")UserService userOperationService) {
+        this.userAccountVerificationService = userAccountVerificationService;
+        this.userOperationService = userOperationService;
     }
+
+
 
     @RestController
     @RequestMapping("/mobile_platform/user/account_request")
@@ -31,27 +41,33 @@ public class UserController {
         @PostMapping("/login")
         public ReactiveResponse login(@RequestBody AccountVerificationRequest request) {
             request.setRequestType(AccountVerificationRequestType.LOGIN);
-            return userService.getAccountVerificationResponse(request);
+            return userAccountVerificationService.getAccountVerificationResponse(request);
         }
+
 
         @PostMapping("/register")
         public ReactiveResponse register(@RequestBody AccountVerificationRequest request) {
             request.setRequestType(AccountVerificationRequestType.REGISTER);
-            return userService.getAccountVerificationResponse(request);
+            return userAccountVerificationService.getAccountVerificationResponse(request);
         }
+
 
         @PostMapping("/retrieve_password/email_check")
         public ReactiveResponse emailCheck(@RequestBody AccountVerificationRequest request) {
-            request.setRequestType(AccountVerificationRequestType.RETRIEVE_PASSWORD);
-            return userService.getAccountVerificationResponse(request);
+            request.setRequestType(AccountVerificationRequestType.EMAIL_CHECK);
+            return userAccountVerificationService.getAccountVerificationResponse(request);
         }
 
-        @PostMapping("/retrieve_password/submit_check_code")
-        public ReactiveResponse submitCheckCode(@RequestBody AccountVerificationRequest request){
-            return null;
+
+        @PostMapping("/retrieve_password/submit_reset")
+        public ReactiveResponse submitReset(@RequestBody AccountVerificationRequest request){
+            request.setRequestType(AccountVerificationRequestType.RESET_PASSWORD);
+            return userAccountVerificationService.getAccountVerificationResponse(request);
         }
 
     }
+
+
 
     @RestController
     @RequestMapping("/mobile_platform/user/operation")
@@ -60,8 +76,11 @@ public class UserController {
         @PostMapping("/edit/self_info")
         public ReactiveResponse modifyInfo(@RequestBody OperationRequest request){
             request.setOperationRequestType(OperationRequestType.MODIFY_INFORMATION);
-            return userService.getOperationResponse(request);
+            return userOperationService.getOperationResponse(request);
         }
+
+
+
     }
 
 }
