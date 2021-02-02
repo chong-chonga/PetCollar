@@ -1,4 +1,4 @@
-package com.example.pojo;
+package com.example.util;
 
 import com.example.request.AccountVerificationRequest;
 import com.example.request.AccountVerificationRequestType;
@@ -40,8 +40,9 @@ public class AccountRequestInfoFormat {
         if(!usernameFormatCorrect(request.getUsername())){
             accountRequestInfoFormat.formatVal = StatusCode.USERNAME_FORMAT_WRONG;
         }
-        else if(AccountVerificationRequestType.RETRIEVE_PASSWORD != request.getRequestType()
-                && (!passwordFormatCorrect(request.getPassword()))){
+        else if(AccountVerificationRequestType.RESET_PASSWORD != request.getRequestType()
+                && AccountVerificationRequestType.EMAIL_CHECK != request.getRequestType()
+                && (!passwordFormatCorrect(request.getPassword())) ){
             accountRequestInfoFormat.formatVal = StatusCode.PASSWORD_FORMAT_WRONG;
         }
         else if(AccountVerificationRequestType.REGISTER == request.getRequestType()){

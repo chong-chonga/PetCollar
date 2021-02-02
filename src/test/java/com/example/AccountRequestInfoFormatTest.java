@@ -1,14 +1,14 @@
 package com.example;
 
-import com.example.pojo.AccountRequestInfoFormat;
+import com.example.util.AccountRequestInfoFormat;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.util.Assert;
 
 /**
+ * 修改 AccountRequestInfoFormat类时, 应当能通过当前测试类的所有测试
  * @author Lexin Huang
- * 在修改 AccountRequestInfoFormat类时, 应当能通过当前测试类的所有测试
  * @since 2.0
  */
 @Slf4j
