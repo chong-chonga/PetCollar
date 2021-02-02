@@ -9,9 +9,9 @@ public interface CacheService {
 
     Object getObjectCache(Object k);
 
-    void saveCache(Object k, Object v);
+    void saveStringCache(Object k, Object v);
 
-    void saveCache(Object k, Object v, Long timeOut, TimeUnit timeUnit);
+    void saveStringCache(Object k, Object v, Long timeOut, TimeUnit timeUnit);
 
-    void saveCache(String k, String v, Long timeOut, TimeUnit timeUnit);
+    void saveStringCache(String k, String v, Long timeOut, TimeUnit timeUnit);
 }

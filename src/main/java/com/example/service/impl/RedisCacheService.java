@@ -39,17 +39,17 @@ public class RedisCacheService implements CacheService {
     }
 
     @Override
-    public void saveCache(Object k, Object v) {
+    public void saveStringCache(Object k, Object v) {
         objectRedisTemplate.opsForValue().set(k, v);
     }
 
     @Override
-    public void saveCache(Object k, Object v, Long timeOut, TimeUnit timeUnit) {
+    public void saveStringCache(Object k, Object v, Long timeOut, TimeUnit timeUnit) {
         objectRedisTemplate.opsForValue().set(k, v, timeOut, timeUnit);
     }
 
     @Override
-    public void saveCache(String k, String v, Long timeOut, TimeUnit timeUnit) {
+    public void saveStringCache(String k, String v, Long timeOut, TimeUnit timeUnit) {
         stringRedisTemplate.opsForValue().set(k, v, timeOut, timeUnit);
     }
 }
