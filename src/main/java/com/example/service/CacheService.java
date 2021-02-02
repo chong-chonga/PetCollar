@@ -4,8 +4,6 @@ import java.util.concurrent.TimeUnit;
 
 public interface CacheService {
 
-    boolean exist(Object k);
-
 
     String getStringCache(Object k);
 
@@ -29,4 +27,6 @@ public interface CacheService {
 
 
     void removeObjectKey(Object o);
+
+    void refreshTokenTime(String token, String username);
 }

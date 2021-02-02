@@ -28,12 +28,6 @@ public class RedisCacheService implements CacheService {
 
 
     @Override
-    public boolean exist(Object k) {
-        return null != getStringCache(k);
-    }
-
-
-    @Override
     public String getStringCache(Object k) {
         return stringRedisTemplate.opsForValue().get(k);
     }
@@ -77,5 +71,11 @@ public class RedisCacheService implements CacheService {
     @Override
     public void removeObjectKey(Object o) {
         objectRedisTemplate.delete(o);
+    }
+
+    @Override
+    public void refreshTokenTime(String token, String username) {
+        stringRedisTemplate.opsForValue().set(token, username, 7L, TimeUnit.DAYS);
+        stringRedisTemplate.opsForValue().set(username, token, 7L, TimeUnit.DAYS);
     }
 }
