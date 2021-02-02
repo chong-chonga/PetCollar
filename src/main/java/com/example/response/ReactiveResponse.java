@@ -46,6 +46,8 @@ public class ReactiveResponse {
 
         public static final int PASSWORD_WRONG = 419;
 
+        public static final int VERIFICATION_CODE_HAS_EXPIRED = 420;
+
         public static final int Server_ERROR = 500;
 
         /**
@@ -74,6 +76,8 @@ public class ReactiveResponse {
                     return "不支持的邮箱类型!";
                 case PASSWORD_WRONG:
                     return "密码错误!";
+                case VERIFICATION_CODE_HAS_EXPIRED:
+                    return "验证码已过期!";
                 case Server_ERROR:
                     return "服务器控制器错误!";
                 default:
@@ -82,20 +86,15 @@ public class ReactiveResponse {
         }
     }
 
-    public String getMsg() {
-        return msg;
-    }
-
-    public Integer getCode() {
-        return code;
-    }
-
-    public Object getData() {
-        return data;
-    }
 
     public void setContent(Integer code, ReactiveData reactiveData){
         setStatus(code);
+        this.data = reactiveData;
+    }
+
+    public void setContent(Integer code, String msg, ReactiveData reactiveData){
+        this.code = code;
+        this.msg = msg;
         this.data = reactiveData;
     }
 
