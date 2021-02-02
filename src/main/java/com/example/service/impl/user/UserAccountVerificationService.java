@@ -92,7 +92,7 @@ public class UserAccountVerificationService extends ServiceImpl<UserMapper, User
                     doEmailCheck(request, response, accountVerificationRequestData);
                     break;
                 case RESET_PASSWORD:
-                    doSubmitCheckCode(request, response);
+                    doResetPassword(request, response);
                     break;
                 default:
                     throw new NoSuchAccountVerificationTypeException("错误的账号验证请求");
@@ -136,6 +136,8 @@ public class UserAccountVerificationService extends ServiceImpl<UserMapper, User
     /**
      * 此方法完成了 token 的生成, 并将其存储在 redis中, 有效时间为 7 天
      * 同一账号在7天内登录, 只会获得同一个token
+     * 先将存在于缓存中的值取出, 避免了这样的情况---判断前key存在, 判断后key失效
+     * 这样的思想同样应用于 {@link UserOperationService}方法中
      * @param accountVerificationRequestData 登录注册响应数据
      * @param username                       提供的用户名称
      */
@@ -144,8 +146,7 @@ public class UserAccountVerificationService extends ServiceImpl<UserMapper, User
         if (Strings.isEmpty(token)) {
             token = UUID.randomUUID().toString();
         }
-        cacheService.saveStringCache(token, username, 7L, TimeUnit.DAYS);
-        cacheService.saveStringCache(username, token, 7L, TimeUnit.DAYS);
+        cacheService.refreshTokenTime(token, username);
 
         accountVerificationRequestData.setToken(token);
     }
@@ -202,8 +203,8 @@ public class UserAccountVerificationService extends ServiceImpl<UserMapper, User
 
 
 
-    private void doSubmitCheckCode(AccountVerificationRequest request,
-                                   ReactiveResponse response) {
+    private void doResetPassword(AccountVerificationRequest request,
+                                 ReactiveResponse response) {
         String vfCode;
         String k = verificationCodeCachePrefix + request.getUsername();
         synchronized (obj){

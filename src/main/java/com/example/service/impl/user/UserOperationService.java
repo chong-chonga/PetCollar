@@ -12,6 +12,7 @@ import com.example.response.ReactiveResponse.StatusCode;
 import com.example.service.CacheService;
 import com.example.service.UserService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
@@ -38,17 +39,21 @@ public class UserOperationService extends ServiceImpl<UserMapper, User> implemen
     }
 
 
-
+    /**
+     * 先将存在于缓存中的值取出, 避免出现以下情况: 判断前key存在, 判断后key失效
+     * @param request 用户操作请求
+     * @return 响应式回复, 参见 {@link ReactiveResponse}
+     */
     @Override
     public ReactiveResponse getOperationResponse(OperationRequest request) {
         ReactiveResponse response = new ReactiveResponse();
         OperationRequestData operationRequestData = new OperationRequestData();
         String token = request.getToken();
-        if (cacheService.exist(token)) {
+        String username = cacheService.getStringCache(token);
+        if (!Strings.isEmpty(token)) {
             operationRequestData.setToken(token);
-            User user = getByUsername(cacheService.getStringCache(token));
-            cacheService.saveStringCache(token, user.getUsername(), 7L, TimeUnit.DAYS);
-            cacheService.saveStringCache(user.getUsername(), token, 7L, TimeUnit.DAYS);
+            User user = getByUsername(username);
+            cacheService.refreshTokenTime(token, username);
             doOperation(request, response, operationRequestData, user);
         } else {
             response.setContent(StatusCode.TOKEN_NOT_EXISTS, operationRequestData);
@@ -61,10 +66,7 @@ public class UserOperationService extends ServiceImpl<UserMapper, User> implemen
                              OperationRequestData operationRequestData,
                              User user) {
         if (OperationRequestType.MODIFY_INFORMATION == request.getOperationRequestType()) {
-
-            if(!user.getPassword().equals(request.getOldPassword())){
-                response.setContent(StatusCode.PASSWORD_WRONG, operationRequestData);
-            }else{
+            if(user.getPassword().equals(request.getOldPassword())){
                 user.setEmailAddress(request.getEmailAddress());
                 user.setPassword(request.getNewPassword());
                 UpdateWrapper<User> updateWrapper = new UpdateWrapper<>();
@@ -72,8 +74,9 @@ public class UserOperationService extends ServiceImpl<UserMapper, User> implemen
                 update(user, updateWrapper);
                 operationRequestData.setUser(user);
                 response.setContent(StatusCode.CORRECT, operationRequestData);
+            }else{
+                response.setContent(StatusCode.PASSWORD_WRONG, operationRequestData);
             }
-
         }
     }
 }
