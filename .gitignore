@@ -1,3 +1,11 @@
 target/
 .idea/
 *.iml
+/src/main/resources/static
+/src/main/resources/templates/table
+/src/main/resources/templates/form
+/src/main/resources/templates/error
+/src/main/resources/templates/login.html
+/src/main/resources/templates/common.html
+/src/main/resources/templates/main.html
+/src/main/java/com/example/controller/web
