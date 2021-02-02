@@ -11,6 +11,7 @@ import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
 import javax.mail.MessagingException;
+import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
 /**
@@ -36,8 +37,9 @@ public class SimpleMailService implements MailService {
     @Override
     public void sendVerificationCodeMail(User user, String verificationCode, Long timeOut) throws MessagingException {
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();
-        MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage, true);
-        mimeMessageHelper.setSubject("邮箱验证");
+        MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage, true, "utf-8");
+        mimeMessage.addRecipients(MimeMessage.RecipientType.CC, InternetAddress.parse("csust_petcollar@163.com"));
+        mimeMessageHelper.setSubject("宠物项圈科技账号验证");
         mimeMessageHelper.setFrom(senderMailAddress);
         String emailPage = getVerificationMailPage(user.getUsername(), verificationCode, timeOut, "分钟");
         mimeMessageHelper.setText(emailPage, true);

@@ -205,10 +205,12 @@ public class UserAccountVerificationService extends ServiceImpl<UserMapper, User
     private void doSubmitCheckCode(AccountVerificationRequest request,
                                    ReactiveResponse response) {
         String vfCode;
+        String k = verificationCodeCachePrefix + request.getUsername();
         synchronized (obj){
-            String k = verificationCodeCachePrefix + request.getUsername();
             vfCode = cacheService.getStringCache(k);
-            cacheService.removeStringKey(k);
+            if(null != vfCode && vfCode.equals(request.getVerificationCode())){
+                cacheService.removeStringKey(k);
+            }
         }
         if(!Strings.isEmpty(vfCode)){
             if(vfCode.equals(request.getVerificationCode())){
