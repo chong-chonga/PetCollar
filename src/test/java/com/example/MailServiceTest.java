@@ -19,7 +19,7 @@ class MailServiceTest {
 
 
     @Test
-    public void test1() throws MessagingException {
+    public void testSendVerificationCodeMail() throws MessagingException {
         User user = new User();
         user.setUsername("用户1");
         user.setEmailAddress("1612682622@qq.com");
