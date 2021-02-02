@@ -18,22 +18,41 @@ import lombok.ToString;
 @AllArgsConstructor
 @TableName("pet")
 public class Pet {
+
     @TableId(value = "pet_id", type = IdType.AUTO)
-    private Integer petId;
+    private
+    Integer petId;
+
     @TableField(value = "pet_portrait_path")
-    private String petPortraitPath;
+    private
+    String petPortraitPath;
+
     @TableField(value = "pet_name")
-    private String petName;
+    private
+    String petName;
+
     @TableField(value = "pet_species")
-    private String petSpecies;
+    private
+    String petSpecies;
+
     @TableField(value = "pet_introduction")
-    private String petIntroduction;
+    private
+    String petIntroduction;
+
     @TableField(value = "is_pet_overt")
-    private Boolean isPetOvert;
+    private
+    Boolean isPetOvert;
+
     @TableField(value = "pet_fence_longitude")
-    private Double petLongitude;
+    private
+    Double petLongitude;
+
     @TableField(value = "pet_fence_radius")
-    private Double petLatitude;
+    private
+    Double petLatitude;
+
     @TableField(value = "user_id")
-    private Integer userId;
+    private
+    Integer userId;
+
 }

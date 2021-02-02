@@ -18,13 +18,21 @@ import lombok.ToString;
 @AllArgsConstructor
 @TableName("collar")
 public class Collar {
+
     @TableId(value = "collar_id", type = IdType.AUTO)
-    private Integer collarId;
+    private
+    Integer collarId;
+
     @TableField("collar_introduction")
-    private String collarIntroduction;
+    private
+    String collarIntroduction;
+
     @TableField("user_id")
-    private Integer userId;
+    private
+    Integer userId;
+
     @TableField("pet_id")
-    private Integer petId;
+    private
+    Integer petId;
 
 }

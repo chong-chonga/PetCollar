@@ -11,6 +11,7 @@ import lombok.ToString;
 
 /**
  * @author 悠一木碧
+ * 对应于 user 表的实体对象
  */
 @Data
 @NoArgsConstructor
@@ -18,17 +19,29 @@ import lombok.ToString;
 @ToString
 @TableName("user")
 public class User {
+
     @TableId(value = "user_id", type = IdType.AUTO)
-    private Integer userId;
+    private
+    Integer userId;
+
     @TableField(value = "user_portrait_path")
-    private String userPortraitPath;
+    private
+    String userPortraitPath;
+
     @TableField(value = "user_username")
-    private String username;
+    private
+    String username;
+
     @TableField(value = "user_password")
-    private String password;
+    private
+    String password;
+
     @TableField(value = "user_email_address")
-    private String emailAddress;
+    private
+    String emailAddress;
+
     @TableField(value = "user_introduction")
-    private String userIntroduction;
+    private
+    String userIntroduction;
 
 }
