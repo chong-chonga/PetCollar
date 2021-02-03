@@ -32,16 +32,14 @@ import java.util.concurrent.TimeUnit;
 @Service("userAccountVerificationService")
 public class UserAccountVerificationService extends ServiceImpl<UserMapper, User> implements UserService {
 
-    private final String verificationCodeCachePrefix = "vfCode";
+    private final static String verificationCodeCachePrefix = "vfCode";
 
-    private final
-    MailService mailService;
 
-    private final
-    CacheService cacheService;
+    private final MailService mailService;
 
-    private final
-    UserMapper userMapper;
+    private final CacheService cacheService;
+
+    private final UserMapper userMapper;
 
     private final Object obj = new Object();
 
@@ -70,13 +68,7 @@ public class UserAccountVerificationService extends ServiceImpl<UserMapper, User
     }
 
 
-    /**
-     * 跨层交互时, 确保上一层传入的参数符合 当前的期望,
-     * 对于 controller 传入的参数进行必要的检查, 如不符合规定, 则即时抛出异常, 利于进行断言测试
-     * @param request                        登录注册请求
-     * @param response                       响应内容
-     * @param accountVerificationRequestData 登录注册响应数据
-     */
+//  调用的方法可能抛出的异常将在这层进行统一捕获
     private void dispatchVerificationRequest(AccountVerificationRequest request,
                                              ReactiveResponse response,
                                              AccountVerificationRequestData accountVerificationRequestData) {
@@ -97,7 +89,7 @@ public class UserAccountVerificationService extends ServiceImpl<UserMapper, User
                 default:
                     throw new NoSuchAccountVerificationTypeException("错误的账号验证请求");
             }
-        } catch (NoSuchAccountVerificationTypeException e) {
+        } catch (NoSuchAccountVerificationTypeException | MessagingException e) {
             log.error(e.getMessage());
             response.setContent(StatusCode.Server_ERROR, accountVerificationRequestData);
         }
@@ -107,29 +99,22 @@ public class UserAccountVerificationService extends ServiceImpl<UserMapper, User
     private void doLogin(AccountVerificationRequest request,
                          ReactiveResponse response,
                          AccountVerificationRequestData accountVerificationRequestData) {
-        User userInfo = request.createUserToLogin();
-        if (exist(userInfo)) {
-            accountVerificationRequestData.setUser(getByUsername(request.getUsername()));
 
-            configureVerificationToken(accountVerificationRequestData, userInfo.getUsername());
+        User user = getUserBy(request.getUsername(), request.getPassword());
+        if (!Objects.isNull(user)) {
+            configureVerificationToken(accountVerificationRequestData, user);
             response.setContent(StatusCode.CORRECT, accountVerificationRequestData);
         } else {
             response.setContent(StatusCode.MISMATCH, accountVerificationRequestData);
         }
-
     }
 
 
-    /**
-     * 用于查询对应 user 是否存在
-     * @param user 需要判断是否存在的账号
-     * @return user存在的布尔值
-     */
-    private boolean exist(User user) {
+    private User getUserBy(String username, String password) {
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq(true, "user_username", user.getUsername())
-                .eq(true, "user_password", user.getPassword());
-        return !Objects.isNull(userMapper.selectOne(queryWrapper));
+        queryWrapper.eq(true, "user_username", username)
+                .eq(true, "user_password", password);
+        return userMapper.selectOne(queryWrapper);
     }
 
 
@@ -139,15 +124,17 @@ public class UserAccountVerificationService extends ServiceImpl<UserMapper, User
      * 先将存在于缓存中的值取出, 避免了这样的情况---判断前key存在, 判断后key失效
      * 这样的思想同样应用于 {@link UserOperationService}方法中
      * @param accountVerificationRequestData 登录注册响应数据
-     * @param username                       提供的用户名称
+     * @param user                           提供的用户对象
      */
-    private void configureVerificationToken(AccountVerificationRequestData accountVerificationRequestData, String username) {
-        String token = cacheService.getStringCache(username);
+    private void configureVerificationToken(AccountVerificationRequestData accountVerificationRequestData,
+                                            User user) {
+        String username = user.getUsername();
+        String token = cacheService.getToken(username);
+
         if (Strings.isEmpty(token)) {
             token = UUID.randomUUID().toString();
         }
-        cacheService.refreshTokenTime(token, username);
-
+        cacheService.refreshTokenTime(token, user);
         accountVerificationRequestData.setToken(token);
     }
 
@@ -156,14 +143,11 @@ public class UserAccountVerificationService extends ServiceImpl<UserMapper, User
     private void doRegister(AccountVerificationRequest request,
                             ReactiveResponse response,
                             AccountVerificationRequestData data) {
-        String usernameProvided = request.getUsername();
-        if (!exist(usernameProvided)) {
-            User userInfo = request.createUserToRegister();
-            int userId = userMapper.insert(userInfo);
-            userInfo.setUserId(userId);
-            data.setUser(userInfo);
+        User user = getUserBy(request.getUsername());
+        if (Objects.isNull(user)) {
+            user = register(request.createUserToRegister());
 
-            configureVerificationToken(data, usernameProvided);
+            configureVerificationToken(data, user);
             response.setContent(StatusCode.CORRECT, data);
         } else {
             response.setContent(StatusCode.USERNAME_HAS_REGISTERED, data);
@@ -171,54 +155,52 @@ public class UserAccountVerificationService extends ServiceImpl<UserMapper, User
     }
 
 
-    private boolean exist(String username) {
-        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq(true, "user_username", username);
-        System.out.println(username);
-        return !Objects.isNull(userMapper.selectOne(queryWrapper));
+    private User register(User user) {
+        int id = userMapper.insert(user);
+        user.setUserId(id);
+        return user;
     }
 
 
 
     private void doEmailCheck(AccountVerificationRequest request,
                               ReactiveResponse response,
-                              AccountVerificationRequestData data) {
-        if (exist(request.getUsername())) {
-            User user = getByUsername(request.getUsername());
+                              AccountVerificationRequestData data) throws MessagingException {
+        User user = getUserBy(request.getUsername());
+        if (!Objects.isNull(user)) {
             String verificationCode = VerificationCodeGenerator.generate(8);
-            cacheService.saveStringCache(verificationCodeCachePrefix +request.getUsername(), verificationCode, 5L,
-                    TimeUnit.MINUTES);
-            try {
-                data.setVerificationCode(verificationCode);
-                response.setContent(StatusCode.CORRECT, data);
-                mailService.sendVerificationCodeMail(user, verificationCode, 5L);
-            } catch (MessagingException e) {
-                log.error(e.getMessage());
-                response.setContent(StatusCode.Server_ERROR, data);
-            }
+            cacheService.saveStringCache(verificationCodeCachePrefix +request.getUsername(), verificationCode, 5L, TimeUnit.MINUTES);
+            mailService.sendVerificationCodeMail(user, verificationCode, 5L);
+            data.setVerificationCode(verificationCode);
+            response.setContent(StatusCode.CORRECT, data);
         } else {
             response.setContent(StatusCode.USER_NOT_EXISTS, data);
         }
     }
 
 
+    private User getUserBy(String username){
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("user_username", username);
+        return userMapper.selectOne(queryWrapper);
+    }
+
+
 
     private void doResetPassword(AccountVerificationRequest request,
                                  ReactiveResponse response) {
-        String vfCode;
+        String verificationCode;
         String k = verificationCodeCachePrefix + request.getUsername();
         synchronized (obj){
-            vfCode = cacheService.getStringCache(k);
-            if(null != vfCode && vfCode.equals(request.getVerificationCode())){
-                cacheService.removeStringKey(k);
+            verificationCode = cacheService.getStringCache(k);
+            if(!Strings.isEmpty(verificationCode) && verificationCode.equals(request.getVerificationCode())){
+                cacheService.removeStringCache(k);
             }
         }
-        if(!Strings.isEmpty(vfCode)){
-            if(vfCode.equals(request.getVerificationCode())){
-                UpdateWrapper<User> updateWrapper = new UpdateWrapper<>();
-                updateWrapper.eq("user_username", request.getUsername());
-                updateWrapper.set("user_password", request.getNewPassword());
-                update(updateWrapper);
+        if(!Strings.isEmpty(verificationCode)){
+            if(verificationCode.equals(request.getVerificationCode())){
+                updatePassword(request.getUsername(), request.getNewPassword());
+                cacheService.removeToken(request.getUsername());
                 response.setContent(StatusCode.CORRECT, null);
             }else{
                 response.setContent(StatusCode.MISMATCH, "验证码错误!", null);
@@ -227,6 +209,13 @@ public class UserAccountVerificationService extends ServiceImpl<UserMapper, User
             response.setContent(StatusCode.VERIFICATION_CODE_HAS_EXPIRED, null);
         }
 
+    }
+
+    private void updatePassword(String username, String newPassword){
+        UpdateWrapper<User> updateWrapper = new UpdateWrapper<>();
+        updateWrapper.eq("user_username", username);
+        updateWrapper.set("user_password", newPassword);
+        userMapper.update(null, updateWrapper);
     }
 
 }

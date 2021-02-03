@@ -16,7 +16,6 @@ import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author Lexin Huang
@@ -49,11 +48,10 @@ public class UserOperationService extends ServiceImpl<UserMapper, User> implemen
         ReactiveResponse response = new ReactiveResponse();
         OperationRequestData operationRequestData = new OperationRequestData();
         String token = request.getToken();
-        String username = cacheService.getStringCache(token);
+        User user = cacheService.getUserCache(token);
         if (!Strings.isEmpty(token)) {
             operationRequestData.setToken(token);
-            User user = getByUsername(username);
-            cacheService.refreshTokenTime(token, username);
+            cacheService.refreshTokenTime(token, user);
             doOperation(request, response, operationRequestData, user);
         } else {
             response.setContent(StatusCode.TOKEN_NOT_EXISTS, operationRequestData);
