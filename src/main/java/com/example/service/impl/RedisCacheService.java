@@ -1,7 +1,9 @@
 package com.example.service.impl;
 
+import com.example.pojo.User;
 import com.example.service.CacheService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -17,25 +19,15 @@ public class RedisCacheService implements CacheService {
 
     private final StringRedisTemplate stringRedisTemplate;
 
-    private final RedisTemplate<Object, Object> objectRedisTemplate;
+    private final RedisTemplate<String, User> userRedisTemplate;
 
 
-    public RedisCacheService(StringRedisTemplate stringRedisTemplate, RedisTemplate<Object, Object> objectRedisTemplate) {
+    public RedisCacheService(StringRedisTemplate stringRedisTemplate,
+                             RedisTemplate<String, User> userRedisTemplate) {
         this.stringRedisTemplate = stringRedisTemplate;
-        this.objectRedisTemplate = objectRedisTemplate;
+        this.userRedisTemplate = userRedisTemplate;
     }
 
-
-
-    @Override
-    public String getStringCache(Object k) {
-        return stringRedisTemplate.opsForValue().get(k);
-    }
-
-
-    public Object getObjectCache(Object k){
-        return objectRedisTemplate.opsForValue().get(k);
-    }
 
 
     @Override
@@ -51,31 +43,66 @@ public class RedisCacheService implements CacheService {
 
 
     @Override
-    public void saveObjectCache(Object k, Object v) {
-        objectRedisTemplate.opsForValue().set(k, v);
+    public String getStringCache(Object k) {
+        return stringRedisTemplate.opsForValue().get(k);
     }
 
 
     @Override
-    public void saveObjectCache(Object k, Object v, Long timeOut, TimeUnit timeUnit) {
-        objectRedisTemplate.opsForValue().set(k, v, timeOut, timeUnit);
-    }
-
-
-    @Override
-    public void removeStringKey(String k) {
+    public void removeStringCache(String k) {
         stringRedisTemplate.delete(k);
     }
 
 
-    @Override
-    public void removeObjectKey(Object o) {
-        objectRedisTemplate.delete(o);
+
+    public void saveUserCache(String k, User v){
+        userRedisTemplate.opsForValue().set(k, v);
     }
 
     @Override
-    public void refreshTokenTime(String token, String username) {
-        stringRedisTemplate.opsForValue().set(token, username, 7L, TimeUnit.DAYS);
-        stringRedisTemplate.opsForValue().set(username, token, 7L, TimeUnit.DAYS);
+    public void saveUserCache(String k, User v, Long timeOut, TimeUnit timeUnit) {
+        userRedisTemplate.opsForValue().set(k, v, timeOut, timeUnit);
     }
+
+
+    @Override
+    public User getUserCache(String token) {
+        return userRedisTemplate.opsForValue().get(token);
+    }
+
+    @Override
+    public void removeUserCache(String k) {
+        userRedisTemplate.delete(k);
+    }
+
+
+    @Override
+    public String getToken(String username){
+        return getStringCache(username);
+    }
+
+    @Override
+    public void refreshTokenTime(String token, User user) {
+        refreshTokenTime(token, user, 7L, TimeUnit.DAYS);
+    }
+
+    @Override
+    public void refreshTokenTime(String token, User user, Long timeOut, TimeUnit timeUnit) {
+        stringRedisTemplate.opsForValue().set(user.getUsername(), token, timeOut, timeUnit);
+        userRedisTemplate.opsForValue().set(token, user, timeOut, timeUnit);
+    }
+
+    @Override
+    public void removeToken(String username) {
+        String token = getToken(username);
+        stringRedisTemplate.delete(username);
+        if(!Strings.isEmpty(token)){
+            userRedisTemplate.delete(token);
+        }
+    }
+
+
+
+
+
 }

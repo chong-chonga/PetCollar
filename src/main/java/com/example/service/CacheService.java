@@ -1,15 +1,10 @@
 package com.example.service;
 
+import com.example.pojo.User;
+
 import java.util.concurrent.TimeUnit;
 
 public interface CacheService {
-
-
-    String getStringCache(Object k);
-
-
-    Object getObjectCache(Object k);
-
 
     void saveStringCache(String k, String v);
 
@@ -17,16 +12,35 @@ public interface CacheService {
     void saveStringCache(String k, String v, Long timeOut, TimeUnit timeUnit);
 
 
-    void saveObjectCache(Object k, Object v);
+    String getStringCache(Object k);
 
 
-    void saveObjectCache(Object k, Object v, Long timeOut, TimeUnit timeUnit);
+    void removeStringCache(String k);
 
 
-    void removeStringKey(String k);
+
+    void saveUserCache(String k, User v);
 
 
-    void removeObjectKey(Object o);
+    void saveUserCache(String k, User v, Long timeOut, TimeUnit timeUnit);
 
-    void refreshTokenTime(String token, String username);
+
+    User getUserCache(String k);
+
+
+    void removeUserCache(String k);
+
+
+
+    String getToken(String username);
+
+
+    void refreshTokenTime(String token, User user);
+
+
+    void refreshTokenTime(String token, User user, Long timeOut, TimeUnit timeUnit);
+
+
+    void removeToken(String username);
+
 }
