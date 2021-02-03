@@ -1,6 +1,5 @@
 package com.example.service;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.example.pojo.User;
 import com.example.request.AccountVerificationRequest;
@@ -26,10 +25,5 @@ public interface UserService extends IService<User>{
         return response;
     }
 
-    default User getByUsername(String username){
-        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("user_username", username);
-        return getOne(queryWrapper);
-    }
 
 }
