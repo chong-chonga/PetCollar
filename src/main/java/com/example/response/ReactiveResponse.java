@@ -21,6 +21,7 @@ public class ReactiveResponse {
     protected Object data;
 
     public ReactiveResponse() {
+        setStatus(Server_ERROR);
         this.data = new Object();
     }
 
@@ -40,15 +41,19 @@ public class ReactiveResponse {
 
         public static final int TOKEN_NOT_EXISTS = 416;
 
-        public static final int NEW_PASSWORD_FORMAT_WRONG = 417;
+        public static final int EMAIL_ADDRESS_NOT_SUPPORTED = 417;
 
-        public static final int EMAIL_ADDRESS_NOT_SUPPORTED = 418;
+        public static final int PASSWORD_WRONG = 418;
 
-        public static final int PASSWORD_WRONG = 419;
-
-        public static final int VERIFICATION_CODE_HAS_EXPIRED = 420;
+        public static final int VERIFICATION_CODE_HAS_EXPIRED = 419;
 
         public static final int Server_ERROR = 500;
+
+    }
+    public Object getData(){
+        return this.data;
+    }
+
 
         /**
          * @param statusCode 设置的状态码
@@ -70,21 +75,18 @@ public class ReactiveResponse {
                     return "用户不存在!";
                 case TOKEN_NOT_EXISTS:
                     return "登录已过期!";
-                case NEW_PASSWORD_FORMAT_WRONG:
-                    return "新密码格式错误!";
                 case EMAIL_ADDRESS_NOT_SUPPORTED:
                     return "不支持的邮箱类型!";
                 case PASSWORD_WRONG:
                     return "密码错误!";
                 case VERIFICATION_CODE_HAS_EXPIRED:
-                    return "验证码已过期!";
+                    return "邮箱验证码已过期!";
                 case Server_ERROR:
-                    return "服务器控制器错误!";
+                    return "服务器出错了!";
                 default:
                     return "NONE";
             }
         }
-    }
 
 
     public void setContent(Integer code, ReactiveData reactiveData){
@@ -107,4 +109,11 @@ public class ReactiveResponse {
         this.msg = getStatusMsg(code);
     }
 
+    public Integer getCode() {
+        return code;
+    }
+
+    public String getMsg() {
+        return msg;
+    }
 }
