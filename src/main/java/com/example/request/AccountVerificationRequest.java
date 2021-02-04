@@ -23,17 +23,10 @@ public class AccountVerificationRequest {
 
     private String verificationCode;
 
+    private String token;
+
     private AccountVerificationRequestType requestType;
 
-
-    /**
-     * 用于创建登录时用于查表的 User 对象
-     * @return User 对象, 参见{@link User}
-     */
-    public User createUserToLogin() {
-        return new User(null, null, this.username,
-                this.password, null, null);
-    }
 
 
     /**
