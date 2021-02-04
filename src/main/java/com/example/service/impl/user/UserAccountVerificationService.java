@@ -147,14 +147,11 @@ public class UserAccountVerificationService extends ServiceImpl<UserMapper, User
     private void doTokenLogin(AccountVerificationRequest request,
                               ReactiveResponse response,
                               AccountVerificationRequestData data) {
-        if(!Strings.isEmpty(request.getToken())){
-            User user = cacheService.getUserCache(request.getToken());
-            if(!Objects.isNull(user)){
-                configureLoginRegisterData(data, user);
-                response.setContent(StatusCode.CORRECT, data);
-            } else{
-                response.setContent(StatusCode.TOKEN_NOT_EXISTS, data);
-            }
+        String token = request.getToken();
+        User user = cacheService.getUserIfExist(token);
+        if(!Objects.isNull(user)){
+            configureLoginRegisterData(data, user);
+            response.setContent(StatusCode.CORRECT, data);
         } else{
             response.setContent(StatusCode.TOKEN_NOT_EXISTS, data);
         }

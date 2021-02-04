@@ -24,7 +24,7 @@ public class UserController {
 
 
     public UserController(@Qualifier("userAccountVerificationService") UserService userAccountVerificationService,
-                          @Qualifier("userOperationService")UserService userOperationService) {
+                          @Qualifier("userOperationService")           UserService userOperationService) {
         this.userAccountVerificationService = userAccountVerificationService;
         this.userOperationService = userOperationService;
     }
@@ -81,8 +81,6 @@ public class UserController {
             request.setOperationRequestType(OperationRequestType.MODIFY_INFORMATION);
             return userOperationService.getOperationResponse(request);
         }
-
-
 
     }
 
