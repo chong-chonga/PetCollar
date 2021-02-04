@@ -12,6 +12,4 @@ public interface MailService {
 
     void sendVerificationCodeMail(User user, String verificationCode, Long timeOut) throws MessagingException;
 
-    void sendTextMail(String receiverAddress, String subject, String content);
-
 }

@@ -47,11 +47,6 @@ public class SimpleMailService implements MailService {
         javaMailSender.send(mimeMessage);
     }
 
-    @Override
-    public void sendTextMail(String receiverAddress, String subject, String content) {
-
-    }
-
 
     private String getVerificationMailPage(String username,       String verificationCode,
                                            Long timeOut, String timeUnit) {
