@@ -7,10 +7,7 @@ import com.example.request.OperationRequestType;
 import com.example.response.ReactiveResponse;
 import com.example.service.UserService;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * @author Lexin Huang
@@ -40,7 +37,13 @@ public class UserController {
 
         @PostMapping("/login")
         public ReactiveResponse login(@RequestBody AccountVerificationRequest request) {
-            request.setRequestType(AccountVerificationRequestType.LOGIN);
+            request.setRequestType(AccountVerificationRequestType.NORMAL_LOGIN);
+            return userAccountVerificationService.getAccountVerificationResponse(request);
+        }
+
+        @PostMapping("/token_login")
+        public ReactiveResponse tokenLogin(@RequestBody AccountVerificationRequest request){
+            request.setRequestType(AccountVerificationRequestType.TOKEN_LOGIN);
             return userAccountVerificationService.getAccountVerificationResponse(request);
         }
 
@@ -61,7 +64,7 @@ public class UserController {
 
         @PostMapping("/retrieve_password/submit_reset")
         public ReactiveResponse submitReset(@RequestBody AccountVerificationRequest request){
-            request.setRequestType(AccountVerificationRequestType.RESET_PASSWORD);
+            request.setRequestType(AccountVerificationRequestType.SUBMIT_RESET);
             return userAccountVerificationService.getAccountVerificationResponse(request);
         }
 

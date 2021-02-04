@@ -71,41 +71,44 @@ public class UserAccountVerificationService extends ServiceImpl<UserMapper, User
 //  调用的方法可能抛出的异常将在这层进行统一捕获
     private void dispatchVerificationRequest(AccountVerificationRequest request,
                                              ReactiveResponse response,
-                                             AccountVerificationRequestData accountVerificationRequestData) {
+                                             AccountVerificationRequestData data) {
         try {
             switch (request.getRequestType()) {
-                case LOGIN:
-                    doLogin(request, response, accountVerificationRequestData);
+                case NORMAL_LOGIN:
+                    doNormalLogin(request, response, data);
+                    break;
+                case TOKEN_LOGIN:
+                    doTokenLogin(request, response, data);
                     break;
                 case REGISTER:
-                    doRegister(request, response, accountVerificationRequestData);
+                    doRegister(request, response, data);
                     break;
                 case EMAIL_CHECK:
-                    doEmailCheck(request, response, accountVerificationRequestData);
+                    doEmailCheck(request, response, data);
                     break;
-                case RESET_PASSWORD:
-                    doResetPassword(request, response);
+                case SUBMIT_RESET:
+                    doSubmitReset(request, response);
                     break;
                 default:
                     throw new NoSuchAccountVerificationTypeException("错误的账号验证请求");
             }
         } catch (NoSuchAccountVerificationTypeException | MessagingException e) {
             log.error(e.getMessage());
-            response.setContent(StatusCode.Server_ERROR, accountVerificationRequestData);
+            response.setContent(StatusCode.Server_ERROR, data);
         }
     }
 
 
-    private void doLogin(AccountVerificationRequest request,
-                         ReactiveResponse response,
-                         AccountVerificationRequestData accountVerificationRequestData) {
+    private void doNormalLogin(AccountVerificationRequest request,
+                               ReactiveResponse response,
+                               AccountVerificationRequestData data) {
 
         User user = getUserBy(request.getUsername(), request.getPassword());
         if (!Objects.isNull(user)) {
-            configureVerificationToken(accountVerificationRequestData, user);
-            response.setContent(StatusCode.CORRECT, accountVerificationRequestData);
+            configureLoginRegisterData(data, user);
+            response.setContent(StatusCode.CORRECT, data);
         } else {
-            response.setContent(StatusCode.MISMATCH, accountVerificationRequestData);
+            response.setContent(StatusCode.MISMATCH, data);
         }
     }
 
@@ -119,15 +122,16 @@ public class UserAccountVerificationService extends ServiceImpl<UserMapper, User
 
 
     /**
-     * 此方法完成了 token 的生成, 并将其存储在 redis中, 有效时间为 7 天
-     * 同一账号在7天内登录, 只会获得同一个token
-     * 先将存在于缓存中的值取出, 避免了这样的情况---判断前key存在, 判断后key失效
-     * 这样的思想同样应用于 {@link UserOperationService}方法中
-     * @param accountVerificationRequestData 登录注册响应数据
+     * 登录注册相关的数据 data, 将在这层进行统一配置(包括 user 属性, token 属性)
+     * 通过用户名查询对应的 token 是否已经存在, 如果存在, 将会继续沿用; 如果不存在, 将会生成新的 token
+     * 并将刷新 K:username -> V:token, K:token -> V:user 在缓存中的时间
+     * 同时此方法还将设置 {@link AccountVerificationRequestData} 中的 token 属性
+     * @param data 登录注册响应数据
      * @param user                           提供的用户对象
      */
-    private void configureVerificationToken(AccountVerificationRequestData accountVerificationRequestData,
+    private void configureLoginRegisterData(AccountVerificationRequestData data,
                                             User user) {
+        data.setUser(user);
         String username = user.getUsername();
         String token = cacheService.getToken(username);
 
@@ -135,7 +139,25 @@ public class UserAccountVerificationService extends ServiceImpl<UserMapper, User
             token = UUID.randomUUID().toString();
         }
         cacheService.refreshTokenTime(token, user);
-        accountVerificationRequestData.setToken(token);
+        data.setToken(token);
+    }
+
+
+
+    private void doTokenLogin(AccountVerificationRequest request,
+                              ReactiveResponse response,
+                              AccountVerificationRequestData data) {
+        if(!Strings.isEmpty(request.getToken())){
+            User user = cacheService.getUserCache(request.getToken());
+            if(!Objects.isNull(user)){
+                configureLoginRegisterData(data, user);
+                response.setContent(StatusCode.CORRECT, data);
+            } else{
+                response.setContent(StatusCode.TOKEN_NOT_EXISTS, data);
+            }
+        } else{
+            response.setContent(StatusCode.TOKEN_NOT_EXISTS, data);
+        }
     }
 
 
@@ -146,8 +168,7 @@ public class UserAccountVerificationService extends ServiceImpl<UserMapper, User
         User user = getUserBy(request.getUsername());
         if (Objects.isNull(user)) {
             user = register(request.createUserToRegister());
-
-            configureVerificationToken(data, user);
+            configureLoginRegisterData(data, user);
             response.setContent(StatusCode.CORRECT, data);
         } else {
             response.setContent(StatusCode.USERNAME_HAS_REGISTERED, data);
@@ -156,9 +177,8 @@ public class UserAccountVerificationService extends ServiceImpl<UserMapper, User
 
 
     private User register(User user) {
-        int id = userMapper.insert(user);
-        user.setUserId(id);
-        return user;
+        userMapper.insert(user);
+        return getUserBy(user.getUsername(), user.getPassword());
     }
 
 
@@ -186,9 +206,9 @@ public class UserAccountVerificationService extends ServiceImpl<UserMapper, User
     }
 
 
-
-    private void doResetPassword(AccountVerificationRequest request,
-                                 ReactiveResponse response) {
+//  对于多线程, 将只会放行第一个正确的验证码请求, 然后使验证码失效
+    private void doSubmitReset(AccountVerificationRequest request,
+                               ReactiveResponse response) {
         String verificationCode;
         String k = verificationCodeCachePrefix + request.getUsername();
         synchronized (obj){
@@ -208,8 +228,8 @@ public class UserAccountVerificationService extends ServiceImpl<UserMapper, User
         }else{
             response.setContent(StatusCode.VERIFICATION_CODE_HAS_EXPIRED, null);
         }
-
     }
+
 
     private void updatePassword(String username, String newPassword){
         UpdateWrapper<User> updateWrapper = new UpdateWrapper<>();
