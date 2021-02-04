@@ -4,5 +4,5 @@ package com.example.request;
  * @author Lexin Huang
  */
 public enum AccountVerificationRequestType {
-    LOGIN, REGISTER, EMAIL_CHECK, RESET_PASSWORD
+    NORMAL_LOGIN, TOKEN_LOGIN, REGISTER, EMAIL_CHECK, SUBMIT_RESET
 }
