@@ -1,20 +1,20 @@
 package com.example.service.impl.user;
 
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.mapper.UserMapper;
 import com.example.pojo.User;
 import com.example.request.OperationRequest;
-import com.example.request.OperationRequestType;
 import com.example.response.OperationRequestData;
 import com.example.response.ReactiveResponse;
 import com.example.response.ReactiveResponse.StatusCode;
 import com.example.service.CacheService;
 import com.example.service.UserService;
+import com.example.util.AccountRequestInfoFormat;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+
+import java.util.Objects;
 
 
 /**
@@ -48,33 +48,56 @@ public class UserOperationService extends ServiceImpl<UserMapper, User> implemen
         ReactiveResponse response = new ReactiveResponse();
         OperationRequestData operationRequestData = new OperationRequestData();
         String token = request.getToken();
-        User user = cacheService.getUserCache(token);
-        if (!Strings.isEmpty(token)) {
-            operationRequestData.setToken(token);
+        User user = cacheService.getUserIfExist(token);
+        if(!Objects.isNull(user)){
             cacheService.refreshTokenTime(token, user);
+            operationRequestData.setToken(token);
             doOperation(request, response, operationRequestData, user);
-        } else {
+        }else{
             response.setContent(StatusCode.TOKEN_NOT_EXISTS, operationRequestData);
         }
         return response;
     }
 
+
     private void doOperation(OperationRequest request,
                              ReactiveResponse response,
                              OperationRequestData operationRequestData,
                              User user) {
-        if (OperationRequestType.MODIFY_INFORMATION == request.getOperationRequestType()) {
+        switch (request.getOperationRequestType()){
+            case MODIFY_INFORMATION:
+                doModifyInformation(request, response, operationRequestData, user);
+                break;
+            default:
+                break;
+        }
+    }
+
+
+    private void doModifyInformation(OperationRequest request,
+                                     ReactiveResponse response,
+                                     OperationRequestData operationRequestData,
+                                     User user) {
             if(user.getPassword().equals(request.getOldPassword())){
-                user.setEmailAddress(request.getEmailAddress());
-                user.setPassword(request.getNewPassword());
-                UpdateWrapper<User> updateWrapper = new UpdateWrapper<>();
-                updateWrapper.eq("user_id", user.getUserId());
-                update(user, updateWrapper);
-                operationRequestData.setUser(user);
-                response.setContent(StatusCode.CORRECT, operationRequestData);
+                if(!AccountRequestInfoFormat.passwordFormatCorrect(request.getNewPassword())){
+                    response.setContent(StatusCode.PASSWORD_FORMAT_WRONG, "设置的新密码格式错误!", operationRequestData);
+                } else if(!AccountRequestInfoFormat.emailAddressFormatCorrect(request.getEmailAddress())){
+                    response.setContent(StatusCode.EMAIL_ADDRESS_NOT_SUPPORTED, operationRequestData);
+                } else{
+                    user.setPassword(request.getNewPassword());
+                    user.setEmailAddress(request.getEmailAddress());
+                    update(user);
+                    operationRequestData.setUser(user);
+                    response.setContent(StatusCode.CORRECT, operationRequestData);
+                }
             }else{
                 response.setContent(StatusCode.PASSWORD_WRONG, operationRequestData);
             }
-        }
     }
+
+
+    private void update(User user){
+        userMapper.updateById(user);
+    }
+
 }

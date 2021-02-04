@@ -66,8 +66,17 @@ public class RedisCacheService implements CacheService {
 
 
     @Override
-    public User getUserCache(String token) {
-        return userRedisTemplate.opsForValue().get(token);
+    public User getUserCache(String k) {
+        return userRedisTemplate.opsForValue().get(k);
+    }
+
+    @Override
+    public User getUserIfExist(String token) {
+        if(Strings.isEmpty(token)){
+            return null;
+        }else{
+            return getUserCache(token);
+        }
     }
 
     @Override

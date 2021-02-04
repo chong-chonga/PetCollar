@@ -27,6 +27,7 @@ public interface CacheService {
 
     User getUserCache(String k);
 
+    User getUserIfExist(String token);
 
     void removeUserCache(String k);
 
