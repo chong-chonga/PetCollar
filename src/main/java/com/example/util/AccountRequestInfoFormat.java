@@ -36,18 +36,18 @@ public class AccountRequestInfoFormat {
     public static AccountRequestInfoFormat solveRequestInfoFormat(AccountVerificationRequest request) {
 
         AccountRequestInfoFormat accountRequestInfoFormat = new AccountRequestInfoFormat();
-
-        if(!usernameFormatCorrect(request.getUsername())){
-            accountRequestInfoFormat.formatVal = StatusCode.USERNAME_FORMAT_WRONG;
-        }
-        else if(AccountVerificationRequestType.RESET_PASSWORD != request.getRequestType()
-                && AccountVerificationRequestType.EMAIL_CHECK != request.getRequestType()
-                && (!passwordFormatCorrect(request.getPassword())) ){
-            accountRequestInfoFormat.formatVal = StatusCode.PASSWORD_FORMAT_WRONG;
-        }
-        else if(AccountVerificationRequestType.REGISTER == request.getRequestType()){
-            if(!emailAddressFormatCorrect(request.getEmailAddress())){
-                accountRequestInfoFormat.formatVal = StatusCode.EMAIL_ADDRESS_NOT_SUPPORTED;
+        AccountVerificationRequestType type = request.getRequestType();
+        if(AccountVerificationRequestType.TOKEN_LOGIN != type){
+            if(!usernameFormatCorrect(request.getUsername())){
+                accountRequestInfoFormat.formatVal = StatusCode.USERNAME_FORMAT_WRONG;
+            }
+            else if(AccountVerificationRequestType.SUBMIT_RESET != type
+                    && AccountVerificationRequestType.EMAIL_CHECK != type
+                    && (!passwordFormatCorrect(request.getPassword())) ){
+                accountRequestInfoFormat.formatVal = StatusCode.PASSWORD_FORMAT_WRONG;
+            }
+            else if(AccountVerificationRequestType.REGISTER == type && !emailAddressFormatCorrect(request.getEmailAddress())){
+                    accountRequestInfoFormat.formatVal = StatusCode.EMAIL_ADDRESS_NOT_SUPPORTED;
             }
         }
         return accountRequestInfoFormat;
