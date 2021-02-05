@@ -1,9 +1,9 @@
 package com.example.controller.reactive;
 
+import com.example.request.AccountSettingsRequest;
+import com.example.request.AccountSettingsRequestType;
 import com.example.request.AccountVerificationRequest;
 import com.example.request.AccountVerificationRequestType;
-import com.example.request.OperationRequest;
-import com.example.request.OperationRequestType;
 import com.example.response.ReactiveResponse;
 import com.example.service.UserService;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -13,20 +13,19 @@ import org.springframework.web.bind.annotation.*;
  * @author Lexin Huang
  */
 @RestController
-@RequestMapping("/mobile_platform/user")
 public class UserController {
 
     private final
     UserService userAccountVerificationService;
 
     private final
-    UserService userOperationService;
+    UserService userSettingsService;
 
 
     public UserController(@Qualifier("userAccountVerificationService") UserService userAccountVerificationService,
-                          @Qualifier("userOperationService")           UserService userOperationService) {
+                          @Qualifier("userSettingsService")           UserService userSettingsService) {
         this.userAccountVerificationService = userAccountVerificationService;
-        this.userOperationService = userOperationService;
+        this.userSettingsService = userSettingsService;
     }
 
 
@@ -40,6 +39,7 @@ public class UserController {
             request.setRequestType(AccountVerificationRequestType.NORMAL_LOGIN);
             return userAccountVerificationService.getAccountVerificationResponse(request);
         }
+
 
         @PostMapping("/token_login")
         public ReactiveResponse tokenLogin(@RequestBody AccountVerificationRequest request){
@@ -57,7 +57,7 @@ public class UserController {
 
         @PostMapping("/retrieve_password/email_check")
         public ReactiveResponse emailCheck(@RequestBody AccountVerificationRequest request) {
-            request.setRequestType(AccountVerificationRequestType.EMAIL_CHECK);
+            request.setRequestType(AccountVerificationRequestType.SEND_EMAIL);
             return userAccountVerificationService.getAccountVerificationResponse(request);
         }
 
@@ -73,15 +73,17 @@ public class UserController {
 
 
     @RestController
-    @RequestMapping("/mobile_platform/user/operation")
-    public class OperationRequestController {
+    @RequestMapping("/users/settings")
+    public class AccountSettingsController{
 
-        @PostMapping("/edit/self_info")
-        public ReactiveResponse modifyInfo(@RequestBody OperationRequest request){
-            request.setOperationRequestType(OperationRequestType.MODIFY_INFORMATION);
-            return userOperationService.getOperationResponse(request);
+        @PatchMapping("/security")
+        public ReactiveResponse modifyPassword(@RequestBody AccountSettingsRequest request){
+            request.setAccountSettingsRequestType(AccountSettingsRequestType.MODIFY_PASSWORD);
+            return userSettingsService.getSettingsResponse(request);
         }
 
     }
+
+
 
 }
