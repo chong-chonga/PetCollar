@@ -2,7 +2,6 @@ package com.example.service.impl.user;
 
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.mapper.UserMapper;
 import com.example.pojo.User;
@@ -83,8 +82,8 @@ public class UserAccountVerificationService extends ServiceImpl<UserMapper, User
                 case REGISTER:
                     doRegister(request, response, data);
                     break;
-                case EMAIL_CHECK:
-                    doEmailCheck(request, response, data);
+                case SEND_EMAIL:
+                    doSendEmail(request, response, data);
                     break;
                 case SUBMIT_RESET:
                     doSubmitReset(request, response);
@@ -180,9 +179,9 @@ public class UserAccountVerificationService extends ServiceImpl<UserMapper, User
 
 
 
-    private void doEmailCheck(AccountVerificationRequest request,
-                              ReactiveResponse response,
-                              AccountVerificationRequestData data) throws MessagingException {
+    private void doSendEmail(AccountVerificationRequest request,
+                             ReactiveResponse response,
+                             AccountVerificationRequestData data) throws MessagingException {
         User user = getUserBy(request.getUsername());
         if (!Objects.isNull(user)) {
             String verificationCode = VerificationCodeGenerator.generate(8);
@@ -209,30 +208,18 @@ public class UserAccountVerificationService extends ServiceImpl<UserMapper, User
         String verificationCode;
         String k = verificationCodeCachePrefix + request.getUsername();
         synchronized (obj){
-            verificationCode = cacheService.getStringCache(k);
+            verificationCode = cacheService.getStringIfExists(k);
             if(!Strings.isEmpty(verificationCode) && verificationCode.equals(request.getVerificationCode())){
                 cacheService.removeStringCache(k);
             }
         }
         if(!Strings.isEmpty(verificationCode)){
-            if(verificationCode.equals(request.getVerificationCode())){
-                updatePassword(request.getUsername(), request.getNewPassword());
-                cacheService.removeToken(request.getUsername());
-                response.setContent(StatusCode.CORRECT, null);
-            }else{
-                response.setContent(StatusCode.MISMATCH, "验证码错误!", null);
-            }
+            updatePassword(request.getUsername(), request.getPassword());
+            cacheService.removeToken(request.getUsername());
+            response.setContent(StatusCode.CORRECT, null);
         }else{
-            response.setContent(StatusCode.VERIFICATION_CODE_HAS_EXPIRED, null);
+            response.setContent(StatusCode.VERIFICATION_CODE_ERROR, null);
         }
-    }
-
-
-    private void updatePassword(String username, String newPassword){
-        UpdateWrapper<User> updateWrapper = new UpdateWrapper<>();
-        updateWrapper.eq("user_username", username);
-        updateWrapper.set("user_password", newPassword);
-        userMapper.update(null, updateWrapper);
     }
 
 }
