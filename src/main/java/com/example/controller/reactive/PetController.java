@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
  * @author Lexin Huang
  */
 @RestController
-@RequestMapping("/pet-collar-system")
+@RequestMapping("/users")
 public class PetController {
 
     private final PetService petService;
@@ -20,16 +20,21 @@ public class PetController {
     }
 
 
-    @GetMapping("/pets")
-    public ReactiveResponse getUserPets(@RequestBody PetRequest request){
-        request.setRequestType(PetRequestType.GET);
+    @GetMapping("/{userId}/pets")
+    public ReactiveResponse getUserPets(@PathVariable String userId,
+                                        @RequestBody PetRequest request){
+        request.setUserId(userId);
+        request.setRequestType(PetRequestType.GET_USER_PETS);
         return petService.getPetResponse(request);
     }
 
-    @PutMapping("/pets")
-    public ReactiveResponse addPet(@RequestBody PetRequest request){
-        request.setRequestType(PetRequestType.PUT);
+    @PostMapping("/{userId}/pets")
+    public ReactiveResponse addPet(@PathVariable String userId,
+                                   @RequestBody PetRequest request){
+        request.setUserId(userId);
+        request.setRequestType(PetRequestType.POST);
         return petService.getPetResponse(request);
     }
+
 
 }

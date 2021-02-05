@@ -14,6 +14,8 @@ import lombok.ToString;
 @NoArgsConstructor
 public class PetRequest {
 
+    private String userId;
+
     private String token;
 
     private PetRequestType requestType;
@@ -22,8 +24,9 @@ public class PetRequest {
 
     private String petSpecies;
 
-    private String petIntroduction;
+    private String petIntroduction = "~这只宠物还没有介绍哦~";
 
-    private Boolean isPetOvert;
+    private Boolean isPetOvert = false;
+
 
 }
