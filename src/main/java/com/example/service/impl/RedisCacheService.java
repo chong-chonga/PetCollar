@@ -53,6 +53,14 @@ public class RedisCacheService implements CacheService {
         stringRedisTemplate.delete(k);
     }
 
+    @Override
+    public String getStringIfExists(String k) {
+        if(Strings.isEmpty(k)){
+            return null;
+        } else{
+            return getStringCache(k);
+        }
+    }
 
 
     public void saveUserCache(String k, User v){
