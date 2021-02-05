@@ -10,6 +10,8 @@ import org.apache.logging.log4j.util.Strings;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.example.request.AccountVerificationRequestType.*;
+
 
 /**
  * @author Lexin Huang
@@ -20,8 +22,8 @@ public class AccountRequestInfoFormat {
 
     private Integer formatVal;
 
-    private AccountRequestInfoFormat(){
-        this.formatVal = StatusCode.CORRECT;
+    private AccountRequestInfoFormat(Integer val){
+        this.formatVal = val;
     }
 
     public boolean isCorrect() {
@@ -35,23 +37,52 @@ public class AccountRequestInfoFormat {
 
     public static AccountRequestInfoFormat solveRequestInfoFormat(AccountVerificationRequest request) {
 
-        AccountRequestInfoFormat accountRequestInfoFormat = new AccountRequestInfoFormat();
+        AccountRequestInfoFormat accountRequestInfoFormat = new AccountRequestInfoFormat(StatusCode.CORRECT);
         AccountVerificationRequestType type = request.getRequestType();
-        if(AccountVerificationRequestType.TOKEN_LOGIN != type){
-            if(!usernameFormatCorrect(request.getUsername())){
-                accountRequestInfoFormat.formatVal = StatusCode.USERNAME_FORMAT_WRONG;
-            }
-            else if(AccountVerificationRequestType.SUBMIT_RESET != type
-                    && AccountVerificationRequestType.EMAIL_CHECK != type
-                    && (!passwordFormatCorrect(request.getPassword())) ){
-                accountRequestInfoFormat.formatVal = StatusCode.PASSWORD_FORMAT_WRONG;
-            }
-            else if(AccountVerificationRequestType.REGISTER == type && !emailAddressFormatCorrect(request.getEmailAddress())){
-                    accountRequestInfoFormat.formatVal = StatusCode.EMAIL_ADDRESS_NOT_SUPPORTED;
+//        免密登录不检查任何格式
+        if(TOKEN_LOGIN == type){
+            return accountRequestInfoFormat;
+        }
+        String username = request.getUsername();
+        String password = request.getPassword();
+        String emailAddress = request.getEmailAddress();
+//        提交重置密码时, 不检查用户名; 登录/注册/找回密码时检查
+        if(SUBMIT_RESET != type){
+            usernameCheck(username, accountRequestInfoFormat);
+        }
+//        发送邮件时, 不检查密码和邮箱格式
+        if(SEND_EMAIL != type){
+            passwordCheck(password, accountRequestInfoFormat);
+//            注册时, 检查邮箱格式
+            if(REGISTER == type){
+                emailCheck(emailAddress, accountRequestInfoFormat);
             }
         }
         return accountRequestInfoFormat;
     }
+
+
+    private static void passwordCheck(String password, AccountRequestInfoFormat accountRequestInfoFormat) {
+        if(!passwordFormatCorrect(password)){
+            accountRequestInfoFormat.formatVal = StatusCode.PASSWORD_FORMAT_WRONG;
+        }
+    }
+
+
+    private static void usernameCheck(String username, AccountRequestInfoFormat accountRequestInfoFormat) {
+        if(!usernameFormatCorrect(username)){
+            accountRequestInfoFormat.setFormatVal(StatusCode.USERNAME_FORMAT_WRONG);
+        }
+    }
+
+
+    private static void emailCheck(String emailAddress,
+                                   AccountRequestInfoFormat accountRequestInfoFormat){
+        if(!emailAddressFormatCorrect(emailAddress)){
+            accountRequestInfoFormat.formatVal = StatusCode.EMAIL_ADDRESS_NOT_SUPPORTED;
+        }
+    }
+
 
 
     /**
