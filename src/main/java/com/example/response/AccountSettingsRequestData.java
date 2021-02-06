@@ -13,7 +13,7 @@ import lombok.ToString;
 @Data
 @NoArgsConstructor
 @ToString
-public class OperationRequestData extends ReactiveData{
+public class AccountSettingsRequestData extends ReactiveData{
     private User user;
     private String token;
 }

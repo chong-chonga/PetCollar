@@ -12,13 +12,11 @@ import lombok.ToString;
 @ToString
 @AllArgsConstructor
 @NoArgsConstructor
-public class OperationRequest {
+public class AccountSettingsRequest {
     private String token;
-    private String username;
     private String oldPassword;
     private String newPassword;
-    private String emailAddress;
-    private OperationRequestType operationRequestType;
+    private AccountSettingsRequestType accountSettingsRequestType;
 
 
 }
