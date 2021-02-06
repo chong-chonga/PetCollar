@@ -1,9 +1,12 @@
 package com.example.request;
 
+import com.example.pojo.Pet;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+
+import java.util.Objects;
 
 /**
  * @author Lexin Huang
@@ -16,6 +19,8 @@ public class PetRequest {
 
     private String userId;
 
+    private String petId;
+
     private String token;
 
     private PetRequestType requestType;
@@ -24,9 +29,18 @@ public class PetRequest {
 
     private String petSpecies;
 
-    private String petIntroduction = "~这只宠物还没有介绍哦~";
+    private String petIntroduction;
 
     private Boolean isPetOvert = false;
 
+    public Pet createPetToAdd(Integer ownerId){
+        Pet pet = new Pet();
+        pet.setPetName(this.petName);
+        pet.setPetSpecies(this.petSpecies);
+        pet.setIsPetOvert(this.isPetOvert);
+        pet.setPetIntroduction(Objects.requireNonNullElse(this.petIntroduction, "~这只宠物还没有介绍哦~"));
+        pet.setUserId(ownerId);
+        return pet;
+    }
 
 }

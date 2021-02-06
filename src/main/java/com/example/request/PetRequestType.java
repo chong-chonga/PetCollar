@@ -4,5 +4,5 @@ package com.example.request;
  * @author Lexin Huang
  */
 public enum PetRequestType {
-    GET_USER_PETS, POST
+    SEARCH_USER_PETS, ADD_PET, MODIFY_PET_INFO
 }
