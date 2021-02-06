@@ -19,8 +19,6 @@ public class AccountVerificationRequest {
 
     private String emailAddress;
 
-    private String newPassword;
-
     private String verificationCode;
 
     private String token;
