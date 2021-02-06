@@ -23,11 +23,10 @@ public class UserController {
 
 
     public UserController(@Qualifier("userAccountVerificationService") UserService userAccountVerificationService,
-                          @Qualifier("userSettingsService")           UserService userSettingsService) {
+                          @Qualifier("userSettingsService") UserService userSettingsService) {
         this.userAccountVerificationService = userAccountVerificationService;
         this.userSettingsService = userSettingsService;
     }
-
 
 
     @RestController
@@ -42,7 +41,7 @@ public class UserController {
 
 
         @PostMapping("/token_login")
-        public ReactiveResponse tokenLogin(@RequestBody AccountVerificationRequest request){
+        public ReactiveResponse tokenLogin(@RequestBody AccountVerificationRequest request) {
             request.setRequestType(AccountVerificationRequestType.TOKEN_LOGIN);
             return userAccountVerificationService.getAccountVerificationResponse(request);
         }
@@ -63,7 +62,7 @@ public class UserController {
 
 
         @PostMapping("/retrieve_password/submit_reset")
-        public ReactiveResponse submitReset(@RequestBody AccountVerificationRequest request){
+        public ReactiveResponse submitReset(@RequestBody AccountVerificationRequest request) {
             request.setRequestType(AccountVerificationRequestType.SUBMIT_RESET);
             return userAccountVerificationService.getAccountVerificationResponse(request);
         }
@@ -71,19 +70,16 @@ public class UserController {
     }
 
 
-
     @RestController
     @RequestMapping("/users/settings")
-    public class AccountSettingsController{
+    public class AccountSettingsController {
 
         @PatchMapping("/security")
-        public ReactiveResponse modifyPassword(@RequestBody AccountSettingsRequest request){
+        public ReactiveResponse modifyPassword(@RequestBody AccountSettingsRequest request) {
             request.setAccountSettingsRequestType(AccountSettingsRequestType.MODIFY_PASSWORD);
             return userSettingsService.getSettingsResponse(request);
         }
 
     }
-
-
 
 }

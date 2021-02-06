@@ -12,7 +12,7 @@ import com.example.response.ReactiveResponse.StatusCode;
 import com.example.service.CacheService;
 import com.example.service.MailService;
 import com.example.service.UserService;
-import com.example.util.AccountRequestInfoFormat;
+import com.example.util.RequestInfoFormat;
 import com.example.util.NoSuchAccountVerificationTypeException;
 import com.example.util.VerificationCodeGenerator;
 import lombok.extern.slf4j.Slf4j;
@@ -55,7 +55,7 @@ public class UserAccountVerificationService extends ServiceImpl<UserMapper, User
 
     @Override
     public ReactiveResponse getAccountVerificationResponse(AccountVerificationRequest request) {
-        AccountRequestInfoFormat requestInfoFormat = AccountRequestInfoFormat.solveRequestInfoFormat(request);
+        RequestInfoFormat requestInfoFormat = RequestInfoFormat.solveRequestInfoFormat(request);
         ReactiveResponse response = new ReactiveResponse();
         AccountVerificationRequestData accountVerificationRequestData = new AccountVerificationRequestData();
         if (requestInfoFormat.isCorrect()) {
@@ -167,7 +167,7 @@ public class UserAccountVerificationService extends ServiceImpl<UserMapper, User
             configureLoginRegisterData(data, user);
             response.setContent(StatusCode.CORRECT, data);
         } else {
-            response.setContent(StatusCode.USERNAME_HAS_REGISTERED, data);
+            response.setContent(StatusCode.NAME_HAS_REGISTERED, data);
         }
     }
 

@@ -29,13 +29,15 @@ public class ReactiveResponse {
 
         public static final int CORRECT = 200;
 
-        public static final int USERNAME_FORMAT_WRONG = 411;
+        public static final int RESOURCE_DOES_NOT_EXIST = 404;
+
+        public static final int NAME_FORMAT_WRONG = 411;
 
         public static final int PASSWORD_FORMAT_WRONG = 412;
 
         public static final int MISMATCH = 413;
 
-        public static final int USERNAME_HAS_REGISTERED = 414;
+        public static final int NAME_HAS_REGISTERED = 414;
 
         public static final int USER_NOT_EXISTS = 415;
 
@@ -45,7 +47,11 @@ public class ReactiveResponse {
 
         public static final int PASSWORD_WRONG = 418;
 
-        public static final int VERIFICATION_CODE_HAS_EXPIRED = 419;
+        public static final int VERIFICATION_CODE_ERROR = 419;
+
+        public static final int UNAUTHORIZED = 420;
+
+        public static final int FORMAT_WRONG = 421;
 
         public static final int Server_ERROR = 500;
 
@@ -63,14 +69,16 @@ public class ReactiveResponse {
             switch (statusCode) {
                 case CORRECT:
                     return "请求成功!";
-                case USERNAME_FORMAT_WRONG:
-                    return "用户名格式错误!";
+                case RESOURCE_DOES_NOT_EXIST:
+                    return "访问的资源不存在! 可能是无该用户或该用户已注销!";
+                case NAME_FORMAT_WRONG:
+                    return "名称格式错误!";
                 case PASSWORD_FORMAT_WRONG:
                     return "密码格式错误!";
                 case MISMATCH:
                     return "用户名或密码错误!";
-                case USERNAME_HAS_REGISTERED:
-                    return "用户名已被注册!";
+                case NAME_HAS_REGISTERED:
+                    return "该名称已被使用过了!";
                 case USER_NOT_EXISTS:
                     return "用户不存在!";
                 case TOKEN_NOT_EXISTS:
@@ -79,8 +87,12 @@ public class ReactiveResponse {
                     return "不支持的邮箱类型!";
                 case PASSWORD_WRONG:
                     return "密码错误!";
-                case VERIFICATION_CODE_HAS_EXPIRED:
-                    return "邮箱验证码已过期!";
+                case VERIFICATION_CODE_ERROR:
+                    return "验证码错误!";
+                case UNAUTHORIZED:
+                    return "您没有这个权限!";
+                case FORMAT_WRONG:
+                    return "格式错误!";
                 case Server_ERROR:
                     return "服务器出错了!";
                 default:

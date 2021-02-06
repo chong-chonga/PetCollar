@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit;
  * @author Lexin Huang
  */
 @Slf4j
-@Service("redisCacheService")
+@Service
 public class RedisCacheService implements CacheService {
 
     private final StringRedisTemplate stringRedisTemplate;
@@ -27,7 +27,6 @@ public class RedisCacheService implements CacheService {
         this.stringRedisTemplate = stringRedisTemplate;
         this.userRedisTemplate = userRedisTemplate;
     }
-
 
 
     @Override
@@ -55,15 +54,15 @@ public class RedisCacheService implements CacheService {
 
     @Override
     public String getStringIfExists(String k) {
-        if(Strings.isEmpty(k)){
+        if (Strings.isEmpty(k)) {
             return null;
-        } else{
+        } else {
             return getStringCache(k);
         }
     }
 
 
-    public void saveUserCache(String k, User v){
+    public void saveUserCache(String k, User v) {
         userRedisTemplate.opsForValue().set(k, v);
     }
 
@@ -80,9 +79,9 @@ public class RedisCacheService implements CacheService {
 
     @Override
     public User getUserIfExist(String token) {
-        if(Strings.isEmpty(token)){
+        if (Strings.isEmpty(token)) {
             return null;
-        }else{
+        } else {
             return getUserCache(token);
         }
     }
@@ -94,7 +93,7 @@ public class RedisCacheService implements CacheService {
 
 
     @Override
-    public String getToken(String username){
+    public String getToken(String username) {
         return getStringCache(username);
     }
 
@@ -113,13 +112,10 @@ public class RedisCacheService implements CacheService {
     public void removeToken(String username) {
         String token = getToken(username);
         stringRedisTemplate.delete(username);
-        if(!Strings.isEmpty(token)){
+        if (!Strings.isEmpty(token)) {
             userRedisTemplate.delete(token);
         }
     }
-
-
-
 
 
 }

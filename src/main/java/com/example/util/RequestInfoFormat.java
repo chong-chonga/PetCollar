@@ -18,11 +18,11 @@ import static com.example.request.AccountVerificationRequestType.*;
  */
 @Data
 @ToString
-public class AccountRequestInfoFormat {
+public class RequestInfoFormat {
 
     private Integer formatVal;
 
-    private AccountRequestInfoFormat(Integer val){
+    private RequestInfoFormat(Integer val){
         this.formatVal = val;
     }
 
@@ -35,51 +35,51 @@ public class AccountRequestInfoFormat {
     }
 
 
-    public static AccountRequestInfoFormat solveRequestInfoFormat(AccountVerificationRequest request) {
+    public static RequestInfoFormat solveRequestInfoFormat(AccountVerificationRequest request) {
 
-        AccountRequestInfoFormat accountRequestInfoFormat = new AccountRequestInfoFormat(StatusCode.CORRECT);
+        RequestInfoFormat requestInfoFormat = new RequestInfoFormat(StatusCode.CORRECT);
         AccountVerificationRequestType type = request.getRequestType();
 //        免密登录不检查任何格式
         if(TOKEN_LOGIN == type){
-            return accountRequestInfoFormat;
+            return requestInfoFormat;
         }
         String username = request.getUsername();
         String password = request.getPassword();
         String emailAddress = request.getEmailAddress();
 //        提交重置密码时, 不检查用户名; 登录/注册/找回密码时检查
         if(SUBMIT_RESET != type){
-            usernameCheck(username, accountRequestInfoFormat);
+            usernameCheck(username, requestInfoFormat);
         }
 //        发送邮件时, 不检查密码和邮箱格式
         if(SEND_EMAIL != type){
-            passwordCheck(password, accountRequestInfoFormat);
-//            注册时, 检查邮箱格式
+            passwordCheck(password, requestInfoFormat);
+//            只有注册时, 才会检查邮箱格式
             if(REGISTER == type){
-                emailCheck(emailAddress, accountRequestInfoFormat);
+                emailCheck(emailAddress, requestInfoFormat);
             }
         }
-        return accountRequestInfoFormat;
+        return requestInfoFormat;
     }
 
 
-    private static void passwordCheck(String password, AccountRequestInfoFormat accountRequestInfoFormat) {
+    private static void passwordCheck(String password, RequestInfoFormat requestInfoFormat) {
         if(!passwordFormatCorrect(password)){
-            accountRequestInfoFormat.formatVal = StatusCode.PASSWORD_FORMAT_WRONG;
+            requestInfoFormat.formatVal = StatusCode.PASSWORD_FORMAT_WRONG;
         }
     }
 
 
-    private static void usernameCheck(String username, AccountRequestInfoFormat accountRequestInfoFormat) {
-        if(!usernameFormatCorrect(username)){
-            accountRequestInfoFormat.setFormatVal(StatusCode.USERNAME_FORMAT_WRONG);
+    private static void usernameCheck(String username, RequestInfoFormat requestInfoFormat) {
+        if(!nameFormatCorrect(username)){
+            requestInfoFormat.setFormatVal(StatusCode.NAME_FORMAT_WRONG);
         }
     }
 
 
     private static void emailCheck(String emailAddress,
-                                   AccountRequestInfoFormat accountRequestInfoFormat){
+                                   RequestInfoFormat requestInfoFormat){
         if(!emailAddressFormatCorrect(emailAddress)){
-            accountRequestInfoFormat.formatVal = StatusCode.EMAIL_ADDRESS_NOT_SUPPORTED;
+            requestInfoFormat.formatVal = StatusCode.EMAIL_ADDRESS_NOT_SUPPORTED;
         }
     }
 
@@ -88,7 +88,7 @@ public class AccountRequestInfoFormat {
     /**
      * 正则表达式验证昵称
      */
-    public static boolean usernameFormatCorrect(String testName) {
+    public static boolean nameFormatCorrect(String testName) {
         if (null == testName) {
             return false;
         }
