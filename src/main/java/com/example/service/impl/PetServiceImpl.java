@@ -14,7 +14,7 @@ import com.example.response.PetRequestData;
 import com.example.response.ReactiveResponse;
 import com.example.response.ReactiveResponse.StatusCode;
 import com.example.service.PetService;
-import com.example.util.InvalidRequestException;
+import com.example.request.RequestException;
 import com.example.util.RequestInfoFormat;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -56,7 +56,7 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
         }catch (UnauthorizedRequestException e){
             log.error(e.getMessage());
             response.setContent(StatusCode.UNAUTHORIZED, "您没有访问这个资源的权限!", new PetRequestData());
-        }catch (InvalidRequestException e){
+        }catch (RequestException e){
             log.error(e.getMessage());
             response.setContent(StatusCode.ITEM_NOT_OWNED, "您还没有该宠物!", new PetRequestData());
         }
@@ -168,7 +168,7 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
         }else{
             Pet pet = getUserPetByName(request.getPetName(), user.getUserId());
             if(Objects.isNull(pet)) {
-                throw new InvalidRequestException(user.getUsername() + " 没有名称为 " + request.getUsername() + " 的宠物");
+                throw new RequestException(user.getUsername() + " 没有名称为 " + request.getUsername() + " 的宠物");
             }
             updatePetIntroduction(pet, request.getPetIntroduction());
             data.configureData(null, null, pet);
