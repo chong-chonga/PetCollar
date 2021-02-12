@@ -7,7 +7,7 @@ import com.example.request.AccountSettingsRequest;
 import com.example.response.AccountSettingsRequestData;
 import com.example.response.ReactiveResponse;
 import com.example.response.ReactiveResponse.StatusCode;
-import com.example.service.CacheService;
+import com.example.dao.CacheDao;
 import com.example.service.UserService;
 import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -25,17 +26,15 @@ import java.util.Objects;
 public class UserSettingsService extends ServiceImpl<UserMapper, User> implements UserService {
 
     private final
-    CacheService cacheService;
+    CacheDao cacheDao;
 
     private final
     UserMapper userMapper;
 
-    private final Object obj = new Object();
 
-
-    public UserSettingsService(@Qualifier("redisCacheService") CacheService cacheService,
+    public UserSettingsService(@Qualifier("redisCacheDao") CacheDao cacheDao,
                                UserMapper userMapper) {
-        this.cacheService = cacheService;
+        this.cacheDao = cacheDao;
         this.userMapper = userMapper;
     }
 
@@ -50,15 +49,34 @@ public class UserSettingsService extends ServiceImpl<UserMapper, User> implement
         ReactiveResponse response = new ReactiveResponse();
         AccountSettingsRequestData accountSettingsRequestData = new AccountSettingsRequestData();
         String token = request.getToken();
-        User user = cacheService.getUserIfExist(token);
+        User user = getUserIfExists(token);
         if(!Objects.isNull(user)){
-            cacheService.refreshTokenTime(token, user);
+            refreshTokenTime(token, user);
             accountSettingsRequestData.setToken(token);
             doOperation(request, response, accountSettingsRequestData, user);
         }else{
             response.setContent(StatusCode.TOKEN_NOT_EXISTS, accountSettingsRequestData);
         }
         return response;
+    }
+
+    private User getUserIfExists(String token) {
+        if (Objects.isNull(token)) {
+            return null;
+        } else {
+            return cacheDao.getUserCache(token);
+        }
+    }
+
+    /**
+     * 刷新 token 的持续时间为 7 天
+     * @param token 用户令牌
+     * @param user 用户对象
+     */
+    @Deprecated
+    private void refreshTokenTime(String token, User user) {
+        cacheDao.setStringCache(user.getUsername(), token, 7L, TimeUnit.DAYS);
+        cacheDao.setUserCache(token, user, 7L, TimeUnit.DAYS);
     }
 
 
@@ -83,7 +101,7 @@ public class UserSettingsService extends ServiceImpl<UserMapper, User> implement
             if(user.getPassword().equals(request.getOldPassword())){
                 updatePassword(user.getUsername(), request.getNewPassword());
                 user.setPassword(request.getNewPassword());
-                cacheService.refreshTokenTime(request.getToken(), user);
+                refreshTokenTime(request.getToken(), user);
                 accountSettingsRequestData.setUser(user);
                 response.setContent(StatusCode.CORRECT, accountSettingsRequestData);
             }else{

@@ -9,12 +9,11 @@ import com.example.request.AccountVerificationRequest;
 import com.example.response.AccountVerificationRequestData;
 import com.example.response.ReactiveResponse;
 import com.example.response.ReactiveResponse.StatusCode;
-import com.example.service.CacheService;
+import com.example.dao.CacheDao;
 import com.example.service.MailService;
 import com.example.service.UserService;
 import com.example.util.RequestInfoFormat;
-import com.example.util.NoSuchAccountVerificationTypeException;
-import com.example.util.VerificationCodeGenerator;
+import com.example.util.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -29,25 +28,25 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 @Service("userAccountVerificationService")
-public class UserAccountVerificationService extends ServiceImpl<UserMapper, User> implements UserService {
+public class UserLoginRegisterService extends ServiceImpl<UserMapper, User> implements UserService {
 
     private final static String verificationCodeCachePrefix = "vfCode";
 
 
     private final MailService mailService;
 
-    private final CacheService cacheService;
+    private final CacheDao cacheDao;
 
     private final UserMapper userMapper;
 
     private final Object obj = new Object();
 
 
-    public UserAccountVerificationService(@Qualifier("simpleMailService") MailService mailService,
-                                          @Qualifier("redisCacheService") CacheService cacheService,
-                                          UserMapper userMapper) {
+    public UserLoginRegisterService(@Qualifier("simpleMailService") MailService mailService,
+                                    @Qualifier("redisCacheDao") CacheDao cacheDao,
+                                    UserMapper userMapper) {
         this.mailService = mailService;
-        this.cacheService = cacheService;
+        this.cacheDao = cacheDao;
         this.userMapper = userMapper;
     }
 
@@ -67,7 +66,7 @@ public class UserAccountVerificationService extends ServiceImpl<UserMapper, User
     }
 
 
-//  调用的方法可能抛出的异常将在这层进行统一捕获
+    //  调用的方法可能抛出的异常将在这层进行统一捕获
     private void dispatchVerificationRequest(AccountVerificationRequest request,
                                              ReactiveResponse response,
                                              AccountVerificationRequestData data) {
@@ -89,9 +88,9 @@ public class UserAccountVerificationService extends ServiceImpl<UserMapper, User
                     doSubmitReset(request, response);
                     break;
                 default:
-                    throw new NoSuchAccountVerificationTypeException("错误的账号验证请求");
+                    throw new IllegalArgumentException("错误的账号验证请求");
             }
-        } catch (NoSuchAccountVerificationTypeException | MessagingException e) {
+        } catch (IllegalArgumentException | MessagingException e) {
             log.error(e.getMessage());
             response.setContent(StatusCode.Server_ERROR, data);
         }
@@ -102,7 +101,7 @@ public class UserAccountVerificationService extends ServiceImpl<UserMapper, User
                                ReactiveResponse response,
                                AccountVerificationRequestData data) {
 
-        User user = getUserBy(request.getUsername(), request.getPassword());
+        User user = getUserByUsername(request.getUsername(), request.getPassword());
         if (!Objects.isNull(user)) {
             configureLoginRegisterData(data, user);
             response.setContent(StatusCode.CORRECT, data);
@@ -112,7 +111,7 @@ public class UserAccountVerificationService extends ServiceImpl<UserMapper, User
     }
 
 
-    private User getUserBy(String username, String password) {
+    private User getUserByUsername(String username, String password) {
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq(true, "user_username", username)
                 .eq(true, "user_password", password);
@@ -132,13 +131,17 @@ public class UserAccountVerificationService extends ServiceImpl<UserMapper, User
                                             User user) {
         data.setUser(user);
         String username = user.getUsername();
-        String token = cacheService.getToken(username);
+        String token = getToken(username);
 
         if (Strings.isEmpty(token)) {
             token = UUID.randomUUID().toString();
         }
-        cacheService.refreshTokenTime(token, user);
+        refreshTokenTime(token, user);
         data.setToken(token);
+    }
+
+    private String getToken(String username){
+        return cacheDao.getStringCache(username);
     }
 
 
@@ -147,7 +150,7 @@ public class UserAccountVerificationService extends ServiceImpl<UserMapper, User
                               ReactiveResponse response,
                               AccountVerificationRequestData data) {
         String token = request.getToken();
-        User user = cacheService.getUserIfExist(token);
+        User user = getUserIfExists(token);
         if(!Objects.isNull(user)){
             configureLoginRegisterData(data, user);
             response.setContent(StatusCode.CORRECT, data);
@@ -156,12 +159,29 @@ public class UserAccountVerificationService extends ServiceImpl<UserMapper, User
         }
     }
 
+    private User getUserIfExists(String token) {
+        if (Objects.isNull(token)) {
+            return null;
+        } else {
+            return cacheDao.getUserCache(token);
+        }
+    }
 
+    /**
+     * 刷新 token 的持续时间为 7 天
+     * @param token 用户令牌
+     * @param user 用户对象
+     */
+    @Deprecated
+    private void refreshTokenTime(String token, User user) {
+        cacheDao.setStringCache(user.getUsername(), token, 7L, TimeUnit.DAYS);
+        cacheDao.setUserCache(token, user, 7L, TimeUnit.DAYS);
+    }
 
     private void doRegister(AccountVerificationRequest request,
                             ReactiveResponse response,
                             AccountVerificationRequestData data) {
-        User user = getUserBy(request.getUsername());
+        User user = getUserByUsername(request.getUsername());
         if (Objects.isNull(user)) {
             user = register(request.createUserToRegister());
             configureLoginRegisterData(data, user);
@@ -174,7 +194,7 @@ public class UserAccountVerificationService extends ServiceImpl<UserMapper, User
 
     private User register(User user) {
         userMapper.insert(user);
-        return getUserBy(user.getUsername(), user.getPassword());
+        return getUserByUsername(user.getUsername(), user.getPassword());
     }
 
 
@@ -182,10 +202,10 @@ public class UserAccountVerificationService extends ServiceImpl<UserMapper, User
     private void doSendEmail(AccountVerificationRequest request,
                              ReactiveResponse response,
                              AccountVerificationRequestData data) throws MessagingException {
-        User user = getUserBy(request.getUsername());
+        User user = getUserByUsername(request.getUsername());
         if (!Objects.isNull(user)) {
-            String verificationCode = VerificationCodeGenerator.generate(8);
-            cacheService.saveStringCache(verificationCodeCachePrefix +request.getUsername(), verificationCode, 5L, TimeUnit.MINUTES);
+            String verificationCode = StringUtil.getCodeString(8);
+            cacheDao.setStringCache(verificationCodeCachePrefix +request.getUsername(), verificationCode, 5L, TimeUnit.MINUTES);
             mailService.sendVerificationCodeMail(user, verificationCode, 5L);
             data.setVerificationCode(verificationCode);
             response.setContent(StatusCode.CORRECT, data);
@@ -195,7 +215,7 @@ public class UserAccountVerificationService extends ServiceImpl<UserMapper, User
     }
 
 
-    private User getUserBy(String username){
+    private User getUserByUsername(String username){
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("user_username", username);
         return userMapper.selectOne(queryWrapper);
@@ -208,18 +228,26 @@ public class UserAccountVerificationService extends ServiceImpl<UserMapper, User
         String verificationCode;
         String k = verificationCodeCachePrefix + request.getUsername();
         synchronized (obj){
-            verificationCode = cacheService.getStringIfExists(k);
-            if(!Strings.isEmpty(verificationCode) && verificationCode.equals(request.getVerificationCode())){
-                cacheService.removeStringCache(k);
+            verificationCode = getVerificationCodeCache(k);
+            if(!Objects.isNull(verificationCode) && verificationCode.equals(request.getVerificationCode())){
+                cacheDao.deleteStringCache(k);
             }
         }
         if(!Strings.isEmpty(verificationCode)){
             updatePassword(request.getUsername(), request.getPassword());
-            cacheService.removeToken(request.getUsername());
+            deleteToken(request.getUsername());
             response.setContent(StatusCode.CORRECT, null);
         }else{
             response.setContent(StatusCode.VERIFICATION_CODE_ERROR, null);
         }
+    }
+
+    private String getVerificationCodeCache(String k){
+        return cacheDao.getStringCache(k);
+    }
+
+    private void deleteToken(String username){
+        cacheDao.deleteStringCache(username);
     }
 
 }
