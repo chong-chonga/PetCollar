@@ -17,74 +17,74 @@ public class RequestInfoFormatTest {
     @Test
     public void testEmailAddress(){
 //        false
-        Assert.isTrue(!RequestInfoFormat.emailAddressFormatCorrect("123"),
+        Assert.isTrue(!RequestInfoFormat.isEmailAddressFormatCorrect("123"),
                 "123邮箱格式不可能支持");
-        Assert.isTrue(!RequestInfoFormat.emailAddressFormatCorrect("io..@qq.com"),
+        Assert.isTrue(!RequestInfoFormat.isEmailAddressFormatCorrect("io..@qq.com"),
                 "io.@qq.com邮箱格式不可能支持");
-        Assert.isTrue(!RequestInfoFormat.emailAddressFormatCorrect("1612682622@123.com"),
+        Assert.isTrue(!RequestInfoFormat.isEmailAddressFormatCorrect("1612682622@123.com"),
                 "@123.com结尾的邮箱格式不可能支持");
-        Assert.isTrue(!RequestInfoFormat.emailAddressFormatCorrect("hlx_1612682622@@163.com"),
+        Assert.isTrue(!RequestInfoFormat.isEmailAddressFormatCorrect("hlx_1612682622@@163.com"),
                 "hlx_1612682622@@163.com邮箱必定不支持");
-        Assert.isTrue(!RequestInfoFormat.emailAddressFormatCorrect("wang123@..com"),
+        Assert.isTrue(!RequestInfoFormat.isEmailAddressFormatCorrect("wang123@..com"),
                 "wang123@..com邮箱必定不支持");
 
 //      true
 
-        Assert.isTrue(RequestInfoFormat.emailAddressFormatCorrect("123@qq.com"),
+        Assert.isTrue(RequestInfoFormat.isEmailAddressFormatCorrect("123@qq.com"),
                 "123@qq.com邮箱格式必定支持");
-        Assert.isTrue(RequestInfoFormat.emailAddressFormatCorrect("io@qq.com"),
+        Assert.isTrue(RequestInfoFormat.isEmailAddressFormatCorrect("io@qq.com"),
                 "io@qq.com邮箱必定支持");
-        Assert.isTrue(RequestInfoFormat.emailAddressFormatCorrect("1612682622@qq.com"),
+        Assert.isTrue(RequestInfoFormat.isEmailAddressFormatCorrect("1612682622@qq.com"),
                 "1612682622@qq.com 邮箱必定支持");
-        Assert.isTrue(RequestInfoFormat.emailAddressFormatCorrect("hlx_1612682622@163.com"),
+        Assert.isTrue(RequestInfoFormat.isEmailAddressFormatCorrect("hlx_1612682622@163.com"),
                 "hlx_1612682622@163.com邮箱必定支持");
-        Assert.isTrue(RequestInfoFormat.emailAddressFormatCorrect("wang123@126.com"),
+        Assert.isTrue(RequestInfoFormat.isEmailAddressFormatCorrect("wang123@126.com"),
                 "wang123@126.com邮箱必定支持");
     }
 
     @Test
     public void testUsername(){
         //        false
-        Assert.isTrue(!RequestInfoFormat.nameFormatCorrect("Ws6"),
+        Assert.isTrue(!RequestInfoFormat.isNameFormatCorrect("Ws6"),
                 "Ws6"+"用户名格式不可能支持");
-        Assert.isTrue(!RequestInfoFormat.nameFormatCorrect("Qu8["),
+        Assert.isTrue(!RequestInfoFormat.isNameFormatCorrect("Qu8["),
                 "Qu8{"+"用户名格式不可能支持");
-        Assert.isTrue(!RequestInfoFormat.nameFormatCorrect("去2s你的*"),
+        Assert.isTrue(!RequestInfoFormat.isNameFormatCorrect("去2s你的*"),
                 "去2s你的*"+"用户名格式不可能支持");
-        Assert.isTrue(!RequestInfoFormat.nameFormatCorrect("0123456789abcdEFG"),
+        Assert.isTrue(!RequestInfoFormat.isNameFormatCorrect("0123456789abcdEFG"),
                 "0123456789abcdEFG"+"用户名格式不可能支持");
 
 //      true
-        Assert.isTrue(RequestInfoFormat.nameFormatCorrect("Ws6我"),
+        Assert.isTrue(RequestInfoFormat.isNameFormatCorrect("Ws6我"),
                 "Ws6我"+"用户名格式不可能支持");
-        Assert.isTrue(RequestInfoFormat.nameFormatCorrect("Qu8o小"),
+        Assert.isTrue(RequestInfoFormat.isNameFormatCorrect("Qu8o小"),
                 "Qu8o小"+"用户名格式不可能支持");
-        Assert.isTrue(RequestInfoFormat.nameFormatCorrect("去2L你的SSS"),
+        Assert.isTrue(RequestInfoFormat.isNameFormatCorrect("去2L你的SSS"),
                 "去2L你的SSS"+"用户名格式不可能支持");
-        Assert.isTrue(RequestInfoFormat.nameFormatCorrect("0123456789abcdEF"),
+        Assert.isTrue(RequestInfoFormat.isNameFormatCorrect("0123456789abcdEF"),
                 "0123456789abcdEF"+"用户名格式不可能支持");
     }
 
     @Test
     public void testPassword(){
         //        false
-        Assert.isTrue(!RequestInfoFormat.passwordFormatCorrect("1this"),
+        Assert.isTrue(!RequestInfoFormat.isPasswordFormatCorrect("1this"),
                 "1this"+"密码格式不可能支持");
-        Assert.isTrue(!RequestInfoFormat.passwordFormatCorrect("0123456789abcdEFGHI"),
+        Assert.isTrue(!RequestInfoFormat.isPasswordFormatCorrect("0123456789abcdEFGHI"),
                 "0123456789abcdEFGHI"+"密码格式不可能支持");
-        Assert.isTrue(!RequestInfoFormat.passwordFormatCorrect("Your123我的"),
+        Assert.isTrue(!RequestInfoFormat.isPasswordFormatCorrect("Your123我的"),
                 "Your123我的"+"密码格式不可能支持");
-        Assert.isTrue(!RequestInfoFormat.passwordFormatCorrect("#@!45我["),
+        Assert.isTrue(!RequestInfoFormat.isPasswordFormatCorrect("#@!45我["),
                 "#@!45我["+"密码格式不可能支持");
 
 //      true
-        Assert.isTrue(RequestInfoFormat.passwordFormatCorrect("1thisI"),
+        Assert.isTrue(RequestInfoFormat.isPasswordFormatCorrect("1thisI"),
                 "1thisI"+"密码格式必定支持");
-        Assert.isTrue(RequestInfoFormat.passwordFormatCorrect("0123456789abcdEFGH"),
+        Assert.isTrue(RequestInfoFormat.isPasswordFormatCorrect("0123456789abcdEFGH"),
                 "0123456789abcdEFGH"+"密码格式必定支持");
-        Assert.isTrue(RequestInfoFormat.passwordFormatCorrect("Your123"),
+        Assert.isTrue(RequestInfoFormat.isPasswordFormatCorrect("Your123"),
                 "Your123"+"密码格式必定支持");
-        Assert.isTrue(RequestInfoFormat.passwordFormatCorrect("That*@!#'\\"),
+        Assert.isTrue(RequestInfoFormat.isPasswordFormatCorrect("That*@!#'\\"),
                 "That*@!#'\\"+"密码格式必定支持");
     }
 

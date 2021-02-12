@@ -63,14 +63,14 @@ public class RequestInfoFormat {
 
 
     private static void passwordCheck(String password, RequestInfoFormat requestInfoFormat) {
-        if(!passwordFormatCorrect(password)){
+        if(!isPasswordFormatCorrect(password)){
             requestInfoFormat.formatVal = StatusCode.PASSWORD_FORMAT_WRONG;
         }
     }
 
 
     private static void usernameCheck(String username, RequestInfoFormat requestInfoFormat) {
-        if(!nameFormatCorrect(username)){
+        if(!isNameFormatCorrect(username)){
             requestInfoFormat.setFormatVal(StatusCode.NAME_FORMAT_WRONG);
         }
     }
@@ -78,7 +78,7 @@ public class RequestInfoFormat {
 
     private static void emailCheck(String emailAddress,
                                    RequestInfoFormat requestInfoFormat){
-        if(!emailAddressFormatCorrect(emailAddress)){
+        if(!isEmailAddressFormatCorrect(emailAddress)){
             requestInfoFormat.formatVal = StatusCode.EMAIL_ADDRESS_NOT_SUPPORTED;
         }
     }
@@ -88,7 +88,7 @@ public class RequestInfoFormat {
     /**
      * 正则表达式验证昵称
      */
-    public static boolean nameFormatCorrect(String testName) {
+    public static boolean isNameFormatCorrect(String testName) {
         if (null == testName) {
             return false;
         }
@@ -100,7 +100,7 @@ public class RequestInfoFormat {
     /**
      * 正则表达式验证密码
      */
-    public static boolean passwordFormatCorrect(String testPassword) {
+    public static boolean isPasswordFormatCorrect(String testPassword) {
         if (null == testPassword) {
             return false;
         }
@@ -111,7 +111,7 @@ public class RequestInfoFormat {
     }
 
 
-    public static boolean emailAddressFormatCorrect(String emailAddress){
+    public static boolean isEmailAddressFormatCorrect(String emailAddress){
         if(!Strings.isEmpty(emailAddress) &&
            (emailAddress.endsWith("@qq.com") ||
             emailAddress.endsWith("@126.com") ||
