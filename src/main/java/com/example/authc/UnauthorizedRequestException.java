@@ -1,11 +1,11 @@
 package com.example.authc;
 
-import org.apache.shiro.authc.AuthenticationException;
+import com.example.request.RequestException;
 
 /**
  * @author Lexin Huang
  */
-public class UnauthorizedRequestException extends AuthenticationException {
+public class UnauthorizedRequestException extends RequestException {
 
     public UnauthorizedRequestException(String msg){
         super(msg);
