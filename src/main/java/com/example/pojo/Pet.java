@@ -41,7 +41,7 @@ public class Pet {
 
     @TableField(value = "is_pet_overt")
     private
-    Boolean isPetOvert;
+    Boolean overt;
 
     @TableField(value = "pet_fence_longitude")
     private
