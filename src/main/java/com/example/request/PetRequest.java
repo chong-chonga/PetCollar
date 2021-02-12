@@ -17,9 +17,7 @@ import java.util.Objects;
 @NoArgsConstructor
 public class PetRequest {
 
-    private String userId;
-
-    private String petId;
+    private String username;
 
     private String token;
 
@@ -36,8 +34,9 @@ public class PetRequest {
     public Pet createPetToAdd(Integer ownerId){
         Pet pet = new Pet();
         pet.setPetName(this.petName);
+        pet.setPetPortraitPath("http://www.petcollar.top:8082/images/headPortrait/pets/default.png");
         pet.setPetSpecies(this.petSpecies);
-        pet.setIsPetOvert(this.isPetOvert);
+        pet.setOvert(this.isPetOvert);
         pet.setPetIntroduction(Objects.requireNonNullElse(this.petIntroduction, "~这只宠物还没有介绍哦~"));
         pet.setUserId(ownerId);
         return pet;

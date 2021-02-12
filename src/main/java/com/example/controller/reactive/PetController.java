@@ -21,31 +21,29 @@ public class PetController {
     }
 
 
-    @GetMapping("/{userId}/pets/public")
-    public ReactiveResponse getUserPets(@PathVariable String userId,
-                                        @RequestBody PetRequest request){
-        request.setUserId(userId);
-        request.setRequestType(PetRequestType.SEARCH_USER_PETS);
+    @GetMapping("/{username}/pets")
+    public ReactiveResponse getUserPets(@PathVariable("username") String username,
+                                        @RequestBody PetRequest request) {
+        request.setUsername(username);
+        request.setRequestType(PetRequestType.GET_USER_PETS);
         return petService.getPetResponse(request);
     }
 
-
-    @PostMapping("/{userId}/pets")
-    public ReactiveResponse addPet(@PathVariable String userId,
-                                   @RequestBody PetRequest request){
-        request.setUserId(userId);
+    @PostMapping("/{username}/pets")
+    public ReactiveResponse addPet(@PathVariable String username,
+                                   @RequestBody PetRequest request) {
+        request.setUsername(username);
         request.setRequestType(PetRequestType.ADD_PET);
         return petService.getPetResponse(request);
     }
 
-
-    @PatchMapping("/{userId}/pets/{petId}/introduction")
-    public ReactiveResponse modifyPetInfo(@PathVariable String userId,
-                                          @PathVariable String petId,
-                                          @RequestBody PetRequest request){
-        request.setUserId(userId);
-        request.setPetId(petId);
-        request.setRequestType(PetRequestType.MODIFY_PET_INFO);
+    @PatchMapping("/{username}/pets/{petName}/introduction")
+    public ReactiveResponse modifyPetIntroduction(@PathVariable String username,
+                                                  @PathVariable String petName,
+                                                  @RequestBody PetRequest request) {
+        request.setUsername(username);
+        request.setPetName(petName);
+        request.setRequestType(PetRequestType.MODIFY_PET_INTRODUCTION);
         return petService.getPetResponse(request);
     }
 

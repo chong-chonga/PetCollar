@@ -35,6 +35,14 @@ public class PetRequestData extends ReactiveData {
             this.userIntroduction = user.getUserIntroduction();
         }
     }
+
+    public void configureData(List<Pet> pets,
+                               PetRequestData.PetOwner petOwner,
+                               Pet pet) {
+        this.pets = pets;
+        this.petOwner = petOwner;
+        this.pet = pet;
+    }
 }
 
 

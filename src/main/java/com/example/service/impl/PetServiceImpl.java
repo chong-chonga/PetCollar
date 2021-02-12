@@ -1,27 +1,28 @@
 package com.example.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.example.authc.InvalidTokenException;
+import com.example.authc.UnauthorizedRequestException;
+import com.example.dao.CacheDao;
 import com.example.mapper.PetMapper;
 import com.example.mapper.UserMapper;
 import com.example.pojo.Pet;
 import com.example.pojo.User;
 import com.example.request.PetRequest;
-import com.example.request.PetRequestType;
 import com.example.response.PetRequestData;
 import com.example.response.ReactiveResponse;
 import com.example.response.ReactiveResponse.StatusCode;
-import com.example.service.CacheService;
 import com.example.service.PetService;
+import com.example.util.InvalidRequestException;
 import com.example.util.RequestInfoFormat;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.ResourceAccessException;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author Lexin Huang
@@ -32,96 +33,100 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
 
     private final PetMapper petMapper;
 
-    private final CacheService cacheService;
-
-    private final UserMapper userMapper;
+    private final CacheDao cacheDao;
 
     public PetServiceImpl(PetMapper petMapper,
                           UserMapper userMapper,
-                          CacheService cacheService) {
+                          CacheDao cacheDao) {
         this.petMapper = petMapper;
-        this.userMapper = userMapper;
-        this.cacheService = cacheService;
+        this.cacheDao = cacheDao;
     }
 
 
     @Override
     public ReactiveResponse getPetResponse(PetRequest request) {
         ReactiveResponse response = new ReactiveResponse();
-        PetRequestData data = new PetRequestData();
-        String token = request.getToken();
-        User user = cacheService.getUserIfExist(token);
-        if (!Objects.isNull(user)) {
-            cacheService.refreshTokenTime(token, user);
-            doDispatchPetRequest(request, response, user, data);
-        } else {
-            response.setContent(StatusCode.TOKEN_NOT_EXISTS, data);
+        try{
+            User user = getUserByToken(request.getToken());
+            refreshTokenTime(request.getToken(), user);
+            dispatchPetRequest(request, response, user);
+        }catch (InvalidTokenException e){
+            log.error(e.getMessage());
+            response.setContent(StatusCode.TOKEN_NOT_EXISTS, "token无效!", new PetRequestData());
+        }catch (UnauthorizedRequestException e){
+            log.error(e.getMessage());
+            response.setContent(StatusCode.UNAUTHORIZED, "您没有访问这个资源的权限!", new PetRequestData());
+        }catch (InvalidRequestException e){
+            log.error(e.getMessage());
+            response.setContent(StatusCode.ITEM_NOT_OWNED, "您还没有该宠物!", new PetRequestData());
         }
         return response;
     }
 
-    private void doDispatchPetRequest(PetRequest request,
-                                      ReactiveResponse response,
-                                      User user,
-                                      PetRequestData data) {
-        PetRequestType requestType = request.getRequestType();
-        try {
-            switch (requestType) {
-                case SEARCH_USER_PETS:
-                    doSearchUserPets(request, response, data);
-                    break;
-                case ADD_PET:
-                case MODIFY_PET_INFO:
-                    doUpdate(requestType, request, response, data, user);
-                    break;
-            }
-        } catch (NumberFormatException | ResourceAccessException e) {
-            log.error(e.getMessage());
-            response.setContent(StatusCode.RESOURCE_DOES_NOT_EXIST, data);
+    private User getUserByToken(String token) {
+        if (Objects.isNull(token)) {
+            throw new InvalidTokenException("Token不存在!");
         }
-
+        User user = cacheDao.getUserCache(token);
+        if(Objects.isNull(user)){
+            throw new InvalidTokenException("Token不存在!");
+        }
+        return user;
     }
 
-    private void doUpdate(PetRequestType requestType,
-                          PetRequest request,
-                          ReactiveResponse response,
-                          PetRequestData data, User user) {
-        if (!(user.getUserId().toString()).equals(request.getUserId())) {
-            response.setContent(StatusCode.UNAUTHORIZED, data);
+    /**
+     * 刷新 token 的持续时间为 7 天
+     * @param token 用户令牌
+     * @param user 用户对象
+     */
+    @Deprecated
+    private void refreshTokenTime(String token, User user) {
+        cacheDao.setStringCache(user.getUsername(), token, 7L, TimeUnit.DAYS);
+        cacheDao.setUserCache(token, user, 7L, TimeUnit.DAYS);
+    }
+
+    private void dispatchPetRequest(PetRequest request,
+                                    ReactiveResponse response,
+                                    User user) {
+        doPermissionRequest(request, response, user);
+    }
+
+    private void doPermissionRequest(PetRequest request,
+                                     ReactiveResponse response,
+                                     User user) {
+        PetRequestData data = new PetRequestData();
+        if (!user.getUsername().equals(request.getUsername())) {
+            throw new UnauthorizedRequestException(user.getUsername() + " 没有对 " + request.getUsername() + " 账户操作的权利!");
         } else {
-            switch (requestType) {
+            switch (request.getRequestType()) {
+                case GET_USER_PETS:
+                    doGetUserPets(response, data, user);
+                    break;
                 case ADD_PET:
                     doAddPet(request, response, data, user);
                     break;
-                case MODIFY_PET_INFO:
-                    doModifyPetInfo(request, response, data, user);
+                case MODIFY_PET_INTRODUCTION:
+                    doModifyPetIntroduction(request, response, data, user);
                     break;
             }
         }
     }
 
-    private void doSearchUserPets(PetRequest request,
-                                  ReactiveResponse response,
-                                  PetRequestData data) {
-        User userToSearch = userMapper.selectById(request.getUserId());
-        if (Objects.isNull(userToSearch)) {
-            throw new ResourceAccessException("请求的资源不存在!");
-        }
-        List<Pet> pets = getUserPublicPetsBy(userToSearch.getUserId());
+    private void doGetUserPets(ReactiveResponse response,
+                               PetRequestData data,
+                               User user) {
+        List<Pet> pets = getUserPetsByUserId(user.getUserId());
         if (Objects.isNull(pets)) {
             pets = new ArrayList<>();
         }
-        hidePetsLocation(pets);
-        data.setPets(pets);
-        data.setPetOwner(new PetRequestData.PetOwner(userToSearch));
+        data.configureData(pets, null, null);
         response.setContent(StatusCode.CORRECT, data);
     }
 
-    private void hidePetsLocation(List<Pet> pets) {
-        for (Pet pet : pets) {
-            pet.setPetLatitude(null);
-            pet.setPetLongitude(null);
-        }
+    private List<Pet> getUserPetsByUserId(Integer userId) {
+        QueryWrapper<Pet> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("user_id", userId);
+        return petMapper.selectList(queryWrapper);
     }
 
 
@@ -129,20 +134,22 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
                           ReactiveResponse response,
                           PetRequestData data,
                           User user) {
-
-        if (RequestInfoFormat.nameFormatCorrect(request.getPetName())) {
-            if (!exist(request.getPetName())) {
-                Pet pet = request.createPetToAdd(user.getUserId());
-                petMapper.insert(pet);
-                data.setPet(pet);
-                response.setContent(StatusCode.CORRECT, data);
-            } else {
-                response.setContent(StatusCode.NAME_HAS_REGISTERED, data);
+        if (!RequestInfoFormat.isNameFormatCorrect(request.getPetName())) {
+            response.setContent(StatusCode.FORMAT_WRONG, "宠物名称必须在 4-16 个字符内, 由中英文,数字组成!", data);
+        }else{
+            if(!Objects.isNull(request.getPetIntroduction()) && 255 < request.getPetIntroduction().length()){
+                response.setContent(StatusCode.FORMAT_WRONG, "宠物介绍必须在 1-255 个字符内!", data);
+            }else{
+                if (!exist(request.getPetName())) {
+                    Pet pet = request.createPetToAdd(user.getUserId());
+                    save(pet);
+                    data.configureData(null, null, pet);
+                    response.setContent(StatusCode.CORRECT, data);
+                } else {
+                    response.setContent(StatusCode.NAME_HAS_REGISTERED, data);
+                }
             }
-        } else {
-            response.setContent(StatusCode.NAME_FORMAT_WRONG, data);
         }
-
     }
 
     private boolean exist(String petName) {
@@ -152,35 +159,33 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
     }
 
 
-    private void doModifyPetInfo(PetRequest request,
-                                 ReactiveResponse response,
-                                 PetRequestData data,
-                                 User user) {
-        if (null != request.getPetIntroduction() && request.getPetIntroduction().length() <= 255) {
-            Pet pet = petMapper.selectById(request.getPetId());
-            if(!Objects.isNull(pet)){
-                pet.setPetIntroduction(request.getPetIntroduction());
-                UpdateWrapper<Pet> updateWrapper = new UpdateWrapper<>();
-                updateWrapper.eq("pet_id", pet.getPetId())
-                            .set("pet_introduction", pet.getPetIntroduction());
-                update(updateWrapper);
-                data.setPet(pet);
-                response.setContent(StatusCode.CORRECT, data);
-            }else{
-                response.setContent(StatusCode.RESOURCE_DOES_NOT_EXIST, "您还没有这只宠物!", data);
+    private void doModifyPetIntroduction(PetRequest request,
+                                         ReactiveResponse response,
+                                         PetRequestData data,
+                                         User user) throws NumberFormatException {
+        if (Objects.isNull(request.getPetIntroduction()) || request.getPetIntroduction().length() > 255) {
+            response.setContent(StatusCode.FORMAT_WRONG, "宠物介绍必须在 1-255 个字符内!", data);
+        }else{
+            Pet pet = getUserPetByName(request.getPetName(), user.getUserId());
+            if(Objects.isNull(pet)) {
+                throw new InvalidRequestException(user.getUsername() + " 没有名称为 " + request.getUsername() + " 的宠物");
             }
-        } else {
-            response.setContent(StatusCode.FORMAT_WRONG, "宠物介绍必须在1~255个字符内!", data);
+            updatePetIntroduction(pet, request.getPetIntroduction());
+            data.configureData(null, null, pet);
+            response.setContent(StatusCode.CORRECT, data);
         }
     }
 
-
-    private List<Pet> getUserPublicPetsBy(Integer userId) {
+    private Pet getUserPetByName(String petName, int userId) {
         QueryWrapper<Pet> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq(true, "user_id", userId)
-                .eq(true, "is_pet_overt", true);
-        return petMapper.selectList(queryWrapper);
+        queryWrapper.eq(true, "pet_name", petName)
+                    .eq(true, "user_id", userId);
+        return petMapper.selectOne(queryWrapper);
     }
 
+    private void updatePetIntroduction(Pet pet, String newIntroduction) {
+        pet.setPetIntroduction(newIntroduction);
+        updateById(pet);
+    }
 
 }
