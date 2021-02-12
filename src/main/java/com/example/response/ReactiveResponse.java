@@ -29,7 +29,11 @@ public class ReactiveResponse {
 
         public static final int CORRECT = 200;
 
-        public static final int RESOURCE_DOES_NOT_EXIST = 404;
+        public static final int TOKEN_NOT_EXISTS = 401;
+
+        public static final int UNAUTHORIZED = 403;
+
+        public static final int RESOURCE_NOT_EXIST = 404;
 
         public static final int NAME_FORMAT_WRONG = 411;
 
@@ -41,19 +45,18 @@ public class ReactiveResponse {
 
         public static final int USER_NOT_EXISTS = 415;
 
-        public static final int TOKEN_NOT_EXISTS = 416;
-
         public static final int EMAIL_ADDRESS_NOT_SUPPORTED = 417;
 
         public static final int PASSWORD_WRONG = 418;
 
         public static final int VERIFICATION_CODE_ERROR = 419;
 
-        public static final int UNAUTHORIZED = 420;
-
         public static final int FORMAT_WRONG = 421;
 
+        public static final int ITEM_NOT_OWNED = 422;
+
         public static final int Server_ERROR = 500;
+
 
     }
     public Object getData(){
@@ -69,7 +72,7 @@ public class ReactiveResponse {
             switch (statusCode) {
                 case CORRECT:
                     return "请求成功!";
-                case RESOURCE_DOES_NOT_EXIST:
+                case RESOURCE_NOT_EXIST:
                     return "访问的资源不存在! 可能是无该用户或该用户已注销!";
                 case NAME_FORMAT_WRONG:
                     return "名称格式错误!";
@@ -78,9 +81,9 @@ public class ReactiveResponse {
                 case MISMATCH:
                     return "用户名或密码错误!";
                 case NAME_HAS_REGISTERED:
-                    return "该名称已被使用过了!";
+                    return "该名称已被使用过了, 请再挑个名称试试!";
                 case USER_NOT_EXISTS:
-                    return "用户不存在!";
+                    return "该用户名不存在!";
                 case TOKEN_NOT_EXISTS:
                     return "登录已过期!";
                 case EMAIL_ADDRESS_NOT_SUPPORTED:
@@ -90,7 +93,7 @@ public class ReactiveResponse {
                 case VERIFICATION_CODE_ERROR:
                     return "验证码错误!";
                 case UNAUTHORIZED:
-                    return "您没有这个权限!";
+                    return "您没有访问这个资源的权限!";
                 case FORMAT_WRONG:
                     return "格式错误!";
                 case Server_ERROR:
