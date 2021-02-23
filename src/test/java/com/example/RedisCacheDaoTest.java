@@ -45,8 +45,8 @@ public class RedisCacheDaoTest {
         Assert.isTrue(Objects.isNull(cacheDao.getStringCache(key2)),
                 message2);
 
-        cacheDao.setStringCache(key1, val1);
-        cacheDao.setStringCache(key2, val2, 2L, TimeUnit.SECONDS);
+        cacheDao.set(key1, val1);
+        cacheDao.set(key2, val2, 2L, TimeUnit.SECONDS);
         Assert.isTrue(val1.equals(cacheDao.getStringCache(key1)),
                 message1);
         Assert.isTrue(val2.equals(cacheDao.getStringCache(key2)),
@@ -84,8 +84,8 @@ public class RedisCacheDaoTest {
         Assert.isTrue(Objects.isNull(cacheDao.getUserCache(key2)),
                 message2);
 
-        cacheDao.setUserCache(key1, val1);
-        cacheDao.setUserCache(key2, val2, 2L, TimeUnit.SECONDS);
+        cacheDao.set(key1, val1);
+        cacheDao.set(key2, val2, 2L, TimeUnit.SECONDS);
         Assert.isTrue(val1.equals(cacheDao.getUserCache(key1)),
                 message1);
         Assert.isTrue(val2.equals(cacheDao.getUserCache(key2)),
