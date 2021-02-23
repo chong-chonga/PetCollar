@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.*;
  * @author Lexin Huang
  */
 @RestController
-@RequestMapping("/users")
 public class PetController {
 
     private final PetService petService;
@@ -21,29 +20,31 @@ public class PetController {
     }
 
 
-    @GetMapping("/{username}/pets")
-    public ReactiveResponse getUserPets(@PathVariable("username") String username,
-                                        @RequestBody PetRequest request) {
-        request.setUsername(username);
+    @GetMapping("/pets")
+    public ReactiveResponse getUserPets(@RequestBody PetRequest request) {
         request.setRequestType(PetRequestType.GET_USER_PETS);
         return petService.getPetResponse(request);
     }
 
-    @PostMapping("/{username}/pets")
-    public ReactiveResponse addPet(@PathVariable String username,
-                                   @RequestBody PetRequest request) {
-        request.setUsername(username);
+    @PostMapping("/pets")
+    public ReactiveResponse addPet(@RequestBody PetRequest request) {
         request.setRequestType(PetRequestType.ADD_PET);
         return petService.getPetResponse(request);
     }
 
-    @PatchMapping("/{username}/pets/{petName}/introduction")
-    public ReactiveResponse modifyPetIntroduction(@PathVariable String username,
-                                                  @PathVariable String petName,
+    @PatchMapping("/pets/{petName}/introduction")
+    public ReactiveResponse modifyPetIntroduction(@PathVariable String petName,
                                                   @RequestBody PetRequest request) {
-        request.setUsername(username);
         request.setPetName(petName);
         request.setRequestType(PetRequestType.MODIFY_PET_INTRODUCTION);
+        return petService.getPetResponse(request);
+    }
+
+    @DeleteMapping("/pets/{petName}")
+    public ReactiveResponse deletePet(@PathVariable("petName")String petName,
+                                      @RequestBody PetRequest request){
+        request.setPetName(petName);
+        request.setRequestType(PetRequestType.DELETE_PET);
         return petService.getPetResponse(request);
     }
 
