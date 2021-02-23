@@ -11,7 +11,7 @@ import lombok.*;
 @Data
 @NoArgsConstructor
 @ToString
-public class AccountVerificationRequestData extends ReactiveData{
+public class UserLoginRegisterRequestData extends ReactiveData{
     private String token;
     private User user;
     private String verificationCode;

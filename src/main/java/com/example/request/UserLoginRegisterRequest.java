@@ -11,7 +11,7 @@ import lombok.*;
 @ToString
 @AllArgsConstructor
 @NoArgsConstructor
-public class AccountVerificationRequest {
+public class UserLoginRegisterRequest {
 
     private String username;
 
@@ -23,17 +23,18 @@ public class AccountVerificationRequest {
 
     private String token;
 
-    private AccountVerificationRequestType requestType;
+    private UserLoginRegisterRequestType requestType;
 
 
 
     /**
      * 用于创建注册时, 用于插入表的 User 对象
+     * 此方法会默认将会指定用户的默认头像, 参见 resources 目录
      * @return User 对象, 参见{@link User}
      */
     public User createUserToRegister() {
-        return new User(null, null, this.username,
-                this.password, this.emailAddress, null);
+        return new User(null, "http://www.petcollar.top:8082/image/headPortrait/user/default.png", this.username,
+                this.password, this.emailAddress, "您还没有介绍哦~");
     }
 
 
