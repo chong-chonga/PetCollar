@@ -1,6 +1,6 @@
 package com.example;
 
-import com.example.util.RequestInfoFormat;
+import com.example.request.RequestInfoFormat;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -44,7 +44,7 @@ public class RequestInfoFormatTest {
 
     @Test
     public void testUsername(){
-        //        false
+//        false
         Assert.isTrue(!RequestInfoFormat.isNameFormatCorrect("Ws6"),
                 "Ws6"+"用户名格式不可能支持");
         Assert.isTrue(!RequestInfoFormat.isNameFormatCorrect("Qu8["),
@@ -67,7 +67,7 @@ public class RequestInfoFormatTest {
 
     @Test
     public void testPassword(){
-        //        false
+//        false
         Assert.isTrue(!RequestInfoFormat.isPasswordFormatCorrect("1this"),
                 "1this"+"密码格式不可能支持");
         Assert.isTrue(!RequestInfoFormat.isPasswordFormatCorrect("0123456789abcdEFGHI"),
@@ -84,8 +84,10 @@ public class RequestInfoFormatTest {
                 "0123456789abcdEFGH"+"密码格式必定支持");
         Assert.isTrue(RequestInfoFormat.isPasswordFormatCorrect("Your123"),
                 "Your123"+"密码格式必定支持");
-        Assert.isTrue(RequestInfoFormat.isPasswordFormatCorrect("That*@!#'\\"),
-                "That*@!#'\\"+"密码格式必定支持");
+        Assert.isTrue(RequestInfoFormat.isPasswordFormatCorrect("~!@#$%^&*()+=|{}"),
+                "~!@#$%^&*()+=|{}"+"密码格式必定支持");
+        Assert.isTrue(RequestInfoFormat.isPasswordFormatCorrect("':;,\\.<>/-_?"),
+                "':;,\\.<>/-_?"+"密码格式必定支持");
     }
 
 }
