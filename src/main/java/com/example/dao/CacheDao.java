@@ -6,10 +6,10 @@ import java.util.concurrent.TimeUnit;
 
 public interface CacheDao {
 
-    void setStringCache(String k, String v);
+    void set(String k, String v);
 
 
-    void setStringCache(String k, String v, Long timeOut, TimeUnit timeUnit);
+    void set(String k, String v, Long timeOut, TimeUnit timeUnit);
 
 
     String getStringCache(Object k);
@@ -18,10 +18,10 @@ public interface CacheDao {
     void deleteStringCache(String k);
 
 
-    void setUserCache(String k, User v);
+    void set(String k, User v);
 
 
-    void setUserCache(String k, User v, Long timeOut, TimeUnit timeUnit);
+    void set(String k, User v, Long timeOut, TimeUnit timeUnit);
 
 
     User getUserCache(String k);
