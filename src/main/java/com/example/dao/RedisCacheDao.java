@@ -28,28 +28,19 @@ public class RedisCacheDao implements CacheDao {
 
 
     @Override
-    public void setStringCache(String k, String v) {
-        if(null == k){
-            throw new NullPointerException("k 参数不能为 null!");
-        }
+    public void set(String k, String v) {
         stringRedisTemplate.opsForValue().set(k, v);
     }
 
 
     @Override
-    public void setStringCache(String k, String v, Long timeOut, TimeUnit timeUnit) {
-        if(null == k){
-            throw new NullPointerException("k 参数不能为 null!");
-        }
+    public void set(String k, String v, Long timeOut, TimeUnit timeUnit) {
         stringRedisTemplate.opsForValue().set(k, v, timeOut, timeUnit);
     }
 
 
     @Override
     public String getStringCache(Object k) {
-        if(null == k){
-            throw new NullPointerException("k 参数不能为 null!");
-        }
         return stringRedisTemplate.opsForValue().get(k);
     }
 
@@ -60,26 +51,17 @@ public class RedisCacheDao implements CacheDao {
     }
 
 
-    public void setUserCache(String k, User v) {
-        if(null == k){
-            throw new NullPointerException("k 参数不能为 null!");
-        }
+    public void set(String k, User v) {
         userRedisTemplate.opsForValue().set(k, v);
     }
 
     @Override
-    public void setUserCache(String k, User v, Long timeOut, TimeUnit timeUnit) {
-        if(null == k){
-            throw new NullPointerException("k 参数不能为 null!");
-        }
+    public void set(String k, User v, Long timeOut, TimeUnit timeUnit) {
         userRedisTemplate.opsForValue().set(k, v, timeOut, timeUnit);
     }
 
     @Override
     public User getUserCache(String k) {
-        if(null == k){
-            throw new NullPointerException("k 参数不能为 null!");
-        }
         return userRedisTemplate.opsForValue().get(k);
     }
 
