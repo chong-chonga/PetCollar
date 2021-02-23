@@ -2,7 +2,7 @@ package com.example.response;
 
 import lombok.ToString;
 
-import static com.example.response.ReactiveResponse.StatusCode.*;
+import static com.example.response.ReactiveResponse.Status.*;
 
 
 /**
@@ -10,7 +10,7 @@ import static com.example.response.ReactiveResponse.StatusCode.*;
  * @since 2.0
  * 响应式消息的基类, 对于响应状态 code 和 msg 做出相应的调整
  * 对于 code 的设置, 将会自动匹配对应的 msg 且不允许手动设置 msg 的值
- * 只保留 data 的自定义能力, 且限制类型为 ReactiveData 如{@link AccountVerificationRequestData}
+ * 只保留 data 的自定义能力, 且限制类型为 ReactiveData 如{@link UserLoginRegisterRequestData}
  * 将data设置为保护类型, 使得子类可以直接赋值, 而不允许外界调用
  */
 @ToString
@@ -21,107 +21,83 @@ public class ReactiveResponse {
     protected Object data;
 
     public ReactiveResponse() {
-        setStatus(Server_ERROR);
+        setStatus(SERVER_ERROR);
         this.data = new Object();
     }
 
-    public static class StatusCode {
-
-        public static final int CORRECT = 200;
-
-        public static final int TOKEN_NOT_EXISTS = 401;
-
-        public static final int UNAUTHORIZED = 403;
-
-        public static final int RESOURCE_NOT_EXIST = 404;
-
-        public static final int NAME_FORMAT_WRONG = 411;
-
-        public static final int PASSWORD_FORMAT_WRONG = 412;
-
-        public static final int MISMATCH = 413;
-
-        public static final int NAME_HAS_REGISTERED = 414;
-
-        public static final int USER_NOT_EXISTS = 415;
-
-        public static final int EMAIL_ADDRESS_NOT_SUPPORTED = 417;
-
-        public static final int PASSWORD_WRONG = 418;
-
-        public static final int VERIFICATION_CODE_ERROR = 419;
-
-        public static final int FORMAT_WRONG = 421;
-
-        public static final int ITEM_NOT_OWNED = 422;
-
-        public static final int Server_ERROR = 500;
+    public enum Status {
+//      ---SUCCESS---
+        SUCCESS(200, "请求成功"),
 
 
+//      ---WEB_ERROR---
+        USERNAME_FORMAT_WRONG(100001, "用户名格式有误! 用户名限4-16个字符，支持中英文、数字"),
+        PASSWORD_FORMAT_WRONG(100002, "密码格式有误! 密码限6-18 位，支持字母、数字,特殊字符"),
+        EMAIL_FORMAT_WRONG(100003, "邮箱格式有误! 限QQ邮箱和网易邮箱, 且邮箱长度不得超过31个字符!"),
+        USERNAME_NOT_AVAILABLE(100004, "该名称已被使用过了, 请再挑个名称试试!"),
+        MISMATCH(100005, "用户名或密码错误!"),
+        VERIFICATION_CODE_WRONG(100006, "验证码错误!"),
+
+
+//      ---SERVICE_ERROR---
+        INVALID_TOKEN(120001, "令牌无效, 请重新登录!"),
+        UNAUTHORIZED(120002, "您没有访问这个资源的权限!"),
+        INVALID_ITEM(120003, "您还没有这个物品! 请获取后再进行尝试!"),
+
+
+//      ---PARAM_ERROR---
+//        PET_MODULE
+        PET_NAME_FORMAT_WRONG(400001, "宠物名称必须在 4-16 个字符内, 由中英文,数字组成!"),
+        PET_NAME_NOT_AVAILABLE(400002, "该宠物名称已经被用了, 换一个试试~"),
+        PET_INTRODUCTION_TOO_LONG(400003, "宠物介绍不能超过 255 个字符!"),
+
+//        USER_MODULE
+        USER_PASSWORD_WRONG(410001, "密码错误! 请检查是否为原密码!"),
+
+
+//       ---SYS_ERROR---
+        MAIL_SERVICE_NOT_AVAILABLE(900001, "邮箱服务暂时不可用!"),
+        SERVER_ERROR(999999,  "服务器出错了! 请联系管理员以获得帮助");
+
+
+        private final int value;
+
+        private final String msg;
+
+        Status(int value, String msg) {
+            this.value = value;
+            this.msg = msg;
+        }
+
+        public int value(){
+            return this.value;
+        }
     }
+
+
     public Object getData(){
         return this.data;
     }
 
 
-        /**
-         * @param statusCode 设置的状态码
-         * @return 状态码对应的消息
-         */
-        protected static String getStatusMsg(Integer statusCode){
-            switch (statusCode) {
-                case CORRECT:
-                    return "请求成功!";
-                case RESOURCE_NOT_EXIST:
-                    return "访问的资源不存在! 可能是无该用户或该用户已注销!";
-                case NAME_FORMAT_WRONG:
-                    return "名称格式错误!";
-                case PASSWORD_FORMAT_WRONG:
-                    return "密码格式错误!";
-                case MISMATCH:
-                    return "用户名或密码错误!";
-                case NAME_HAS_REGISTERED:
-                    return "该名称已被使用过了, 请再挑个名称试试!";
-                case USER_NOT_EXISTS:
-                    return "该用户名不存在!";
-                case TOKEN_NOT_EXISTS:
-                    return "登录已过期!";
-                case EMAIL_ADDRESS_NOT_SUPPORTED:
-                    return "不支持的邮箱类型!";
-                case PASSWORD_WRONG:
-                    return "密码错误!";
-                case VERIFICATION_CODE_ERROR:
-                    return "验证码错误!";
-                case UNAUTHORIZED:
-                    return "您没有访问这个资源的权限!";
-                case FORMAT_WRONG:
-                    return "格式错误!";
-                case Server_ERROR:
-                    return "服务器出错了!";
-                default:
-                    return "NONE";
-            }
-        }
-
-
-    public void setContent(Integer code, ReactiveData reactiveData){
-        setStatus(code);
+    public void setContent(Status status, ReactiveData reactiveData){
+        setStatus(status);
         this.data = reactiveData;
     }
 
-    public void setContent(Integer code, String msg, ReactiveData reactiveData){
-        this.code = code;
+    public void setContent(Status status, String msg, ReactiveData reactiveData){
+        this.code = status.value;
         this.msg = msg;
         this.data = reactiveData;
     }
 
     /**
      * 这个方法会同时设置 状态码 code 和 状态信息 msg
-     * @param code 响应状态码
+     * @param status 响应状态码
      */
-    private void setStatus(Integer code) {
-        this.code = code;
-        this.msg = getStatusMsg(code);
+    private void setStatus(Status status) {
+        this.code = status.value;
+        this.msg = status.msg;
     }
 
     public Integer getCode() {
