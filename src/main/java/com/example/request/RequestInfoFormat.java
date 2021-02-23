@@ -1,85 +1,91 @@
-package com.example.util;
+package com.example.request;
 
-import com.example.request.AccountVerificationRequest;
-import com.example.request.AccountVerificationRequestType;
-import com.example.response.ReactiveResponse.StatusCode;
-import lombok.Data;
-import lombok.ToString;
 import org.apache.logging.log4j.util.Strings;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.example.request.AccountVerificationRequestType.*;
+import static com.example.request.UserLoginRegisterRequestType.*;
 
 
 /**
  * @author Lexin Huang
  */
-@Data
-@ToString
 public class RequestInfoFormat {
 
-    private Integer formatVal;
+    private RequestInfoFormat(){
 
-    private RequestInfoFormat(Integer val){
-        this.formatVal = val;
     }
 
-    public boolean isCorrect() {
-        return this.formatVal == StatusCode.CORRECT;
+    public static class FormatException extends RequestException{
+
+        public FormatException(String msg) {
+            super(msg);
+        }
     }
 
-    public Integer getStatusCode() {
-        return formatVal;
+    public static class PasswordFormatException extends FormatException{
+
+        public PasswordFormatException(String msg) {
+            super(msg);
+        }
     }
 
+    public static class NameFormatException extends FormatException{
 
-    public static RequestInfoFormat solveRequestInfoFormat(AccountVerificationRequest request) {
+        public NameFormatException(String msg) {
+            super(msg);
+        }
+    }
 
-        RequestInfoFormat requestInfoFormat = new RequestInfoFormat(StatusCode.CORRECT);
-        AccountVerificationRequestType type = request.getRequestType();
+    public static class EmailFormatException extends FormatException{
+        public EmailFormatException(String msg) {
+            super(msg);
+        }
+    }
+
+    public static void solveRequestInfoFormat(UserLoginRegisterRequest request) {
+
+        UserLoginRegisterRequestType type = request.getRequestType();
 //        免密登录不检查任何格式
         if(TOKEN_LOGIN == type){
-            return requestInfoFormat;
+            return;
         }
         String username = request.getUsername();
         String password = request.getPassword();
         String emailAddress = request.getEmailAddress();
 //        提交重置密码时, 不检查用户名; 登录/注册/找回密码时检查
         if(SUBMIT_RESET != type){
-            usernameCheck(username, requestInfoFormat);
+            usernameCheck(username);
         }
 //        发送邮件时, 不检查密码和邮箱格式
-        if(SEND_EMAIL != type){
-            passwordCheck(password, requestInfoFormat);
-//            只有注册时, 才会检查邮箱格式
-            if(REGISTER == type){
-                emailCheck(emailAddress, requestInfoFormat);
-            }
+        if(RETRIEVE_PASSWORD != type){
+            passwordCheck(password);
         }
-        return requestInfoFormat;
+//       只有注册时, 才会检查邮箱格式
+        if(REGISTER == type){
+            emailCheck(emailAddress);
+        }
     }
 
 
-    private static void passwordCheck(String password, RequestInfoFormat requestInfoFormat) {
+    private static void passwordCheck(String password) {
         if(!isPasswordFormatCorrect(password)){
-            requestInfoFormat.formatVal = StatusCode.PASSWORD_FORMAT_WRONG;
+            throw new PasswordFormatException("密码: " + password + " 的用户名格式有误!");
         }
     }
 
 
-    private static void usernameCheck(String username, RequestInfoFormat requestInfoFormat) {
+    private static void usernameCheck(String username) {
         if(!isNameFormatCorrect(username)){
-            requestInfoFormat.setFormatVal(StatusCode.NAME_FORMAT_WRONG);
+            throw new NameFormatException("名称: " + username + " 的用户名格式有误!");
         }
     }
 
 
-    private static void emailCheck(String emailAddress,
-                                   RequestInfoFormat requestInfoFormat){
+    private static void emailCheck(String emailAddress){
         if(!isEmailAddressFormatCorrect(emailAddress)){
-            requestInfoFormat.formatVal = StatusCode.EMAIL_ADDRESS_NOT_SUPPORTED;
+            throw new EmailFormatException("邮箱: " + emailAddress + " 格式不合规范!");
         }
     }
 
@@ -104,9 +110,8 @@ public class RequestInfoFormat {
         if (null == testPassword) {
             return false;
         }
-        //密码格式: 6-18 位，字母、数字、字符
-        String regStr = "^([A-Z]|[a-z]|[0-9]|[~!@#$%^&*()+=|{}':;,\\\\.<>/?])" +
-                "{6,18}$";
+        //密码格式: 限6-18 位，字母、数字、~!@#$%^&*()+=|{}':;,\\.<>/?等特殊字符字符
+        String regStr = "^([A-Z]|[a-z]|[0-9]|[~!@#$%^&*()+=|{}':;,\\\\.<>/\\-_?]){6,18}$";
         return testPassword.matches(regStr);
     }
 
@@ -116,6 +121,7 @@ public class RequestInfoFormat {
            (emailAddress.endsWith("@qq.com") ||
             emailAddress.endsWith("@126.com") ||
             emailAddress.endsWith("@163.com")  )){
+
             Pattern pattern = Pattern.compile("[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\\.[a-zA-Z0-9_-]+)+$");
             Matcher matcher = pattern.matcher(emailAddress);
             return matcher.matches();
