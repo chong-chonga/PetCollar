@@ -202,10 +202,9 @@ public class DefaultUserLoginRegisterService extends DefaultUserService implemen
      * 用户忘记密码时, 通过邮箱验证码重置密码的方法
      * 用户请求成功之后, 更新数据库的信息同时, 将会清除原有的用户缓存 (如果存在的话)
      * 此方法对于并发的请求, 将只会放行第一个正确的验证码, 后续验证码缓存将被清除
-     *
      * @param request  请求体封装对象
      * @param response 响应内容封装对象
-     * @param data
+     * @param data 响应数据
      * @since 3.0
      */
     private void doResetPassword(UserLoginRegisterRequest request,
