@@ -3,7 +3,7 @@ package com.example.util;
 
 import java.text.FieldPosition;
 import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.UUID;
 
 /**
  * @author Lexin Huang
@@ -27,11 +27,7 @@ public class StringUtil {
     }
 
     public static String getUniqueName() {
-        StringBuffer stringBuffer = new StringBuffer();
-        Date date = new Date();
-        stringBuffer.append(getCodeString(10));
-        NAME_FORMAT.format(date, stringBuffer, FIELD_POSITION);
-        return stringBuffer.toString();
+        return UUID.randomUUID().toString().replace("-","");
     }
 
 }

@@ -4,7 +4,7 @@ import com.example.pojo.User;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Component;
 
 import java.util.concurrent.TimeUnit;
 
@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
  * @author Lexin Huang
  */
 @Slf4j
-@Repository
+@Component
 public class RedisCacheDao implements CacheDao {
 
     private final StringRedisTemplate stringRedisTemplate;
@@ -70,6 +70,5 @@ public class RedisCacheDao implements CacheDao {
     public void deleteUserCache(String k) {
         userRedisTemplate.delete(k);
     }
-
 
 }

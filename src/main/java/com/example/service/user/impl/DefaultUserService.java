@@ -1,14 +1,15 @@
-package com.example.service.impl.user;
+package com.example.service.user.impl;
 
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.authc.InvalidTokenException;
+import com.example.exception.TooLongTextException;
 import com.example.dao.CacheDao;
-import com.example.mapper.UserMapper;
 import com.example.pojo.User;
-import com.example.service.BasicRequestInfoFormatService;
-import com.example.service.BasicUserCacheService;
-import com.example.service.UserMailService;
+import com.example.response.ReactiveResponse;
+import com.example.response.Status;
+import com.example.service.ServiceExceptionHandler;
+import com.example.service.user.*;
+import com.example.exception.InvalidPasswordException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
@@ -19,15 +20,16 @@ import org.thymeleaf.context.Context;
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
-
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /**
  * @author Lexin Huang
  */
-public class DefaultUserService extends ServiceImpl<UserMapper, User> implements BasicUserCacheService,
-        UserMailService, BasicRequestInfoFormatService {
+@Slf4j
+public class DefaultUserService<T extends ReactiveResponse.ApiData> extends BasicUserService
+                                implements UserAuthorizationService, UserMailService, ServiceExceptionHandler<T> {
 
     private final CacheDao cacheDao;
 
@@ -46,20 +48,8 @@ public class DefaultUserService extends ServiceImpl<UserMapper, User> implements
     }
 
     @Override
-    public void refreshTokenTime(String token, User user) {
-        if (Objects.isNull(token)) {
-            throw new NullPointerException("token 不能为 null!");
-        }
-        if (Objects.isNull(user.getUsername())) {
-            throw new NullPointerException("username 不能为 null!");
-        }
-        long timeOut = 7L;
-        putUserCache(token, user, timeOut);
-        putStringCache(user.getUsername(), token, timeOut, TimeUnit.DAYS);
-    }
-
-    private void putUserCache(String k, User user, Long timeOut) {
-        cacheDao.set(k, user, timeOut, TimeUnit.DAYS);
+    public void putUserCache(String k, User v, Long timeOut, TimeUnit timeUnit) {
+        cacheDao.set(k, v, timeOut, timeUnit);
     }
 
     @Override
@@ -71,15 +61,8 @@ public class DefaultUserService extends ServiceImpl<UserMapper, User> implements
     }
 
     @Override
-    public User getUserByToken(String token) throws InvalidTokenException {
-        if (Objects.isNull(token)) {
-            throw new InvalidTokenException("token 不能为 null !");
-        }
-        User user = cacheDao.getUserCache(token);
-        if (Objects.isNull(user)) {
-            throw new InvalidTokenException("值为 " + token + " 的token 不存在!");
-        }
-        return user;
+    public User getUserCache(String k) {
+        return cacheDao.getUserCache(k);
     }
 
     @Override
@@ -91,7 +74,7 @@ public class DefaultUserService extends ServiceImpl<UserMapper, User> implements
     }
 
     @Override
-    public void removeToken(String username) {
+    public void removeTokenByUsername(String username) {
         String token = null;
         if (!Objects.isNull(username)) {
             token = getStringCache(username);
@@ -114,27 +97,48 @@ public class DefaultUserService extends ServiceImpl<UserMapper, User> implements
     }
 
 
-    protected void updatePassword(String targetUsername, String password) {
-        UpdateWrapper<User> updateWrapper = new UpdateWrapper<>();
-        updateWrapper.eq(true, "user_username", targetUsername)
-                .set("user_password", password);
-        update(updateWrapper);
+    /**
+     * 执行用户信息的更新, 此方法会同时更新缓存/持久化中的用户信息
+     * @param token 用户令牌
+     * @param user  需要更新的用户对象, 应当包含完整的更新后的数据
+     */
+    protected void executeUpdate(String token, User user) {
+        refreshTokenTime(token, user);
+        updateById(user);
     }
 
 
     @Override
-    public void sendVerificationCodeMail(User user, String verificationCode, Long timeOut) throws MessagingException, MailException {
+    public void sendVerificationCodeMail(User user, String verificationCode, Long timeOut) throws
+                                                                MessagingException, MailException {
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();
         MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage, true, "utf-8");
-        mimeMessage.addRecipients(MimeMessage.RecipientType.CC, InternetAddress.parse(senderMailAddress));
-        mimeMessageHelper.setSubject("宠物项圈科技账号验证");
-        mimeMessageHelper.setFrom(senderMailAddress);
-        String emailPage = getVerificationMailPage(user.getUsername(), verificationCode, timeOut);
-        mimeMessageHelper.setText(emailPage, true);
-        mimeMessageHelper.setTo(user.getEmailAddress());
-        javaMailSender.send(mimeMessage);
+        addCc(mimeMessage);
+        configureBasicEmailInformation(mimeMessageHelper, senderMailAddress, user.getEmailAddress());
+        renderEmailContent(mimeMessageHelper, user.getUsername(), verificationCode, timeOut);
+        sendMail(mimeMessage);
     }
 
+    private void addCc(MimeMessage mimeMessage) throws MessagingException {
+        mimeMessage.addRecipients(MimeMessage.RecipientType.CC, InternetAddress.parse(senderMailAddress));
+    }
+
+    private void configureBasicEmailInformation(MimeMessageHelper mimeMessageHelper,
+                                                String senderMailAddress, String receiverAddress) throws MessagingException {
+        mimeMessageHelper.setSubject("宠物项圈科技账号验证");
+        mimeMessageHelper.setFrom(senderMailAddress);
+        mimeMessageHelper.setTo(receiverAddress);
+    }
+
+    private void renderEmailContent(MimeMessageHelper mimeMessageHelper, String username,
+                                    String verificationCode, Long timeOut) throws MessagingException {
+        String emailPage = getVerificationMailPage(username, verificationCode, timeOut);
+        mimeMessageHelper.setText(emailPage, true);
+    }
+
+    private void sendMail(MimeMessage message){
+        javaMailSender.send(message);
+    }
 
     private String getVerificationMailPage(String username, String verificationCode,
                                            Long timeOut) {
@@ -148,27 +152,20 @@ public class DefaultUserService extends ServiceImpl<UserMapper, User> implements
     }
 
     @Override
-    public Boolean isNameFormatCorrect(String testName) {
-        if (null == testName) {
-            return false;
+    public void handle(Exception e, ReactiveResponse<T> response){
+        log.info(e.getMessage());
+        if (e instanceof InvalidTokenException) {
+            response.setError(Status.INVALID_TOKEN);
+        }else if (e instanceof InvalidPasswordException){
+            response.setError(Status.USER_PASSWORD_WRONG);
+        } else if (e instanceof MessagingException || e instanceof MailException) {
+            response.setError(Status.MAIL_SERVICE_NOT_AVAILABLE);
+        } else if (e instanceof TooLongTextException){
+            response.setError(Status.TEXT_FORMAT_WRONG);
+        } else {
+            log.error(Arrays.toString(e.getStackTrace()));
+            response.setError(Status.SERVER_ERROR);
         }
-        // 昵称格式：限4-16个字符，支持中英文、数字
-        String regStr = "^[\\u4e00-\\u9fa5a-zA-Z0-9]{4,16}$";
-        return testName.matches(regStr);
-    }
-
-    @Override
-    public Boolean isTextFormatCorrect(String testText) {
-        return null != testText && 255 >= testText.length();
-    }
-
-    public boolean passwordFormatCorrect(String testPassword){
-        if (null == testPassword) {
-            return false;
-        }
-        //密码格式: 限6-18 位，字母、数字、~!@#$%^&*()+=|{}':;,\\.<>/?等特殊字符字符
-        String regStr = "^([A-Z]|[a-z]|[0-9]|[~!@#$%^&*()+=|{}':;,\\\\.<>/\\-_?]){6,18}$";
-        return testPassword.matches(regStr);
     }
 
 }

@@ -1,7 +1,8 @@
-package com.example.response;
+package com.example.response.data.pet;
 
 import com.example.pojo.Pet;
 import com.example.pojo.User;
+import com.example.response.ReactiveResponse;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -16,7 +17,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @ToString
-public class PetRequestData extends ReactiveData {
+public class PetRequestData extends ReactiveResponse.ApiData {
     private PetOwner petOwner;
     List<Pet> pets;
     Pet pet;

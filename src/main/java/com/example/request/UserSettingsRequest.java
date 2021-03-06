@@ -14,14 +14,12 @@ import lombok.ToString;
 @NoArgsConstructor
 public class UserSettingsRequest {
 
-    private String token;
+    private String username;
 
     private String oldPassword;
 
     private String newPassword;
 
     private String introduction;
-
-    private UserSettingsRequestType accountSettingsRequestType;
 
 }
