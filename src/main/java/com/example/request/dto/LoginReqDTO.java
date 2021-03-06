@@ -1,8 +1,12 @@
 package com.example.request.dto;
 
+import com.example.response.ReactiveResponse;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import javax.validation.constraints.Pattern;
 

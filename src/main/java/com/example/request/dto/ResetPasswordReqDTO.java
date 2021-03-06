@@ -12,7 +12,7 @@ import javax.validation.constraints.Pattern;
  */
 @Data
 @ApiModel("重置密码请求参数")
-public class RestPasswordReqDTO {
+public class ResetPasswordReqDTO {
     @Pattern(regexp = "^[\\u4e00-\\u9fa5a-zA-Z0-9]{4,16}$",
             message = "用户名必须在 4-16个字符以内，支持中英文、数字")
     @ApiModelProperty(value = "用户名")

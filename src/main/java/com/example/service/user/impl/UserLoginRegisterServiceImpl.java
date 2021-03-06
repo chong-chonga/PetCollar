@@ -6,6 +6,10 @@ import com.example.authc.InvalidTokenException;
 import com.example.dao.CacheDao;
 import com.example.pojo.User;
 import com.example.request.UserLoginRegisterRequest;
+import com.example.request.dto.LoginReqDTO;
+import com.example.request.dto.RegisterReqDTO;
+import com.example.request.dto.ResetPasswordReqDTO;
+import com.example.request.dto.RetrievePasswordReqDTO;
 import com.example.response.ReactiveResponse;
 import com.example.response.Status;
 import com.example.response.data.user.UserLoginRegisterRequestData;
@@ -34,14 +38,25 @@ public class UserLoginRegisterServiceImpl extends DefaultUserService<UserLoginRe
 
     private final static String VERIFICATION_CODE_CACHE_PREFIX = "vfCode#";
 
-    private static final String DEFAULT_AVATAR_PATH = "http://www.petcollar.top:8082/image/avatar/user/default.png";
 
     protected UserLoginRegisterServiceImpl(CacheDao cacheDao, JavaMailSenderImpl javaMailSender, TemplateEngine templateEngine) {
         super(cacheDao, javaMailSender, templateEngine);
     }
 
+    @Deprecated
     @Override
     public ReactiveResponse<UserLoginRegisterRequestData>  getNormalLoginResponse(UserLoginRegisterRequest request) {
+        ReactiveResponse<UserLoginRegisterRequestData>  response = new ReactiveResponse<> ();
+        try {
+            doNormalLogin(request.getUsername(), request.getPassword(), response);
+        } catch (Exception e) {
+            handle(e, response);
+        }
+        return response;
+    }
+
+    @Override
+    public ReactiveResponse<UserLoginRegisterRequestData> getNormalLoginResponse(LoginReqDTO request) {
         ReactiveResponse<UserLoginRegisterRequestData>  response = new ReactiveResponse<> ();
         try {
             doNormalLogin(request.getUsername(), request.getPassword(), response);
@@ -80,11 +95,23 @@ public class UserLoginRegisterServiceImpl extends DefaultUserService<UserLoginRe
         return response;
     }
 
+    @Deprecated
     @Override
     public ReactiveResponse<UserLoginRegisterRequestData>  getRegisterResponse(User user) {
         ReactiveResponse<UserLoginRegisterRequestData>  response = new ReactiveResponse<> ();
         try {
             doRegister(user, response);
+        } catch (Exception e) {
+            handle(e, response);
+        }
+        return response;
+    }
+
+    @Override
+    public ReactiveResponse<UserLoginRegisterRequestData> getRegisterResponse(RegisterReqDTO request) {
+        ReactiveResponse<UserLoginRegisterRequestData>  response = new ReactiveResponse<> ();
+        try {
+            doRegister(request.createUserToRegister(), response);
         } catch (Exception e) {
             handle(e, response);
         }
@@ -103,8 +130,6 @@ public class UserLoginRegisterServiceImpl extends DefaultUserService<UserLoginRe
     }
 
     private User register(User userInfo) {
-        userInfo.setUserPortraitPath(DEFAULT_AVATAR_PATH);
-        userInfo.setUserIntroduction("这个人还没有介绍哦~");
         save(userInfo);
         return getByUsername(userInfo.getUsername());
     }
@@ -145,6 +170,17 @@ public class UserLoginRegisterServiceImpl extends DefaultUserService<UserLoginRe
         return response;
     }
 
+    @Override
+    public ReactiveResponse<UserLoginRegisterRequestData> getEmailCheckResponse(RetrievePasswordReqDTO request) {
+        ReactiveResponse<UserLoginRegisterRequestData> response = new ReactiveResponse<>();
+        try {
+            doEmailCheck(request.getUsername(), response);
+        } catch (Exception e){
+            handle(e, response);
+        }
+        return response;
+    }
+
     private void doEmailCheck(String username, ReactiveResponse<UserLoginRegisterRequestData> response) throws MessagingException {
         UserLoginRegisterRequestData data = new UserLoginRegisterRequestData();
         User user = getByUsername(username);
@@ -173,9 +209,30 @@ public class UserLoginRegisterServiceImpl extends DefaultUserService<UserLoginRe
         return response;
     }
 
+    @Override
+    public ReactiveResponse<UserLoginRegisterRequestData> getResetPasswordResponse(ResetPasswordReqDTO request) {
+        ReactiveResponse<UserLoginRegisterRequestData>  response = new ReactiveResponse<> ();
+        try {
+            doResetPassword(request, response);
+        } catch (Exception e){
+            handle(e, response);
+        }
+        return response;
+    }
 
 
     private void doResetPassword(UserLoginRegisterRequest request, ReactiveResponse<UserLoginRegisterRequestData>  response) {
+        String k = VERIFICATION_CODE_CACHE_PREFIX + request.getUsername();
+        if (verificationCodeMatch(k, request.getVerificationCode())) {
+            updatePassword(request.getUsername(), request.getPassword());
+            removeTokenByUsername(request.getUsername());
+            response.setSuccess(null);
+        } else {
+            response.setError(Status.VERIFICATION_CODE_WRONG);
+        }
+    }
+
+    private void doResetPassword(ResetPasswordReqDTO request, ReactiveResponse<UserLoginRegisterRequestData>  response) {
         String k = VERIFICATION_CODE_CACHE_PREFIX + request.getUsername();
         if (verificationCodeMatch(k, request.getVerificationCode())) {
             updatePassword(request.getUsername(), request.getPassword());
