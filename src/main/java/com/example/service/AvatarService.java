@@ -14,33 +14,33 @@ public interface AvatarService {
 
     /**
      * 获取头像图片资源 url 的前缀, 一般以 http:// 开头 (不包含头像图片名称)
-     * 此方法用于在 {@link AvatarService#deleteAvatar(String portraitPath)}}中, 确定文件 url 路径前缀
+     * 此方法用于在 {@link AvatarService#deleteAvatar(String avatarUrl)}}中, 确定头像资源 url 路径前缀
      * @return 头像图片超链接前缀
      */
     String getAvatarUrlPrefix();
 
     /**
      * 获取头像图片在持久性存储上的存储前缀 (不包含头像图片名称)
-     * 此方法用于在 {@link AvatarService#deleteAvatar(String portraitPath)}}中, 确定文件的路径前缀
+     * 此方法用于在 {@link AvatarService#deleteAvatar(String avatarUrl)}}中, 确定文件存储的路径前缀
      * @return 头像图片在持久性存储上的路径前缀
      */
     String getAvatarResourcePathPrefix();
 
     /**
      * 获取头像图片的默认名称
-     * 此方法用于在 {@link AvatarService#deleteOriginalAvatarIfExists(String portraitPath)} 中判断是否为默认头像
+     * 此方法用于在 {@link AvatarService#deleteOriginalAvatarIfExists(String avatarUrl)} 中判断是否为默认头像
      * @return 头像图片的默认名称
      */
     String getDefaultAvatarName();
 
     /**
      * 删除之前的头像 (如果头像存在且不是默认头像)
-     * @param portraitPath 超链接形式的头像路径
+     * @param avatarUrl 超链接形式的头像路径
      * @throws IOException 当原有头像存在而删除失败时
      */
-    default void deleteOriginalAvatarIfExists(String portraitPath) throws IOException {
-        if (!portraitPath.endsWith(getDefaultAvatarName())) {
-            deleteAvatar(portraitPath);
+    default void deleteOriginalAvatarIfExists(String avatarUrl) throws IOException {
+        if (!avatarUrl.endsWith(getDefaultAvatarName())) {
+            deleteAvatar(avatarUrl);
         }
     }
 
@@ -64,15 +64,15 @@ public interface AvatarService {
      * @return 创建的头像文件的超链接
      * @throws IOException 当创建文件失败时 或 同名称的文件已存在时
      */
-    default String createAvatarFile(MultipartFile image) throws IOException {
+    default String uploadAvatar(MultipartFile image) throws IOException {
         String avatarName = generateUniqueImageName();
         File file = new File(getAvatarResourcePathPrefix() + avatarName);
+        if (file.exists()) {
+            throw new IOException("原名称的图片文件仍然存在! 创建失败!");
+        }
         boolean createSuccess = file.createNewFile();
         if (!createSuccess) {
             throw new IOException("创建图片文件失败!");
-        }
-        if (file.exists()) {
-            throw new IOException("原名称的图片文件仍然存在! 创建失败!");
         }
         image.transferTo(file);
         return getAvatarUrlPrefix() + avatarName;
@@ -80,7 +80,7 @@ public interface AvatarService {
 
     /**
      * 生成图片名称 (确保名称唯一)
-     * @return 图片名称
+     * @return 图片名称 (默认以 .png ) 结尾
      */
     private String generateUniqueImageName() {
         StringBuilder builder = new StringBuilder();
@@ -96,7 +96,7 @@ public interface AvatarService {
     /**
      * 获取头像图片的文件格式, 一般以 "." 字符开头, 如 ".jpg", ".png" 等
      * 此方法用于在 {@link AvatarService#generateUniqueImageName()} 中生成头像文件名称
-     * @return 头像图片存储的路径前缀
+     * @return 头像图片存储的路径前缀 (默认 null )
      */
     default String getAvatarSuffix() {
         return null;
