@@ -5,20 +5,24 @@ import com.example.dao.CacheDao;
 import com.example.mapper.UserMapper;
 import com.example.pojo.User;
 import com.example.response.ReactiveResponse;
+import com.example.response.Status;
 import com.example.response.data.user.UserSearchRequestData;
+import com.example.service.ServiceExceptionHandler;
 import com.example.service.user.UserSearchService;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author Lexin Huang
  */
 @Service
-public class UserSearchServiceImpl extends DefaultUserService<UserSearchRequestData>
-                                        implements UserSearchService {
+public class UserSearchServiceImpl extends BasicUserService
+                                   implements UserSearchService, ServiceExceptionHandler<UserSearchRequestData> {
 
     private final UserMapper userMapper;
 
@@ -30,22 +34,26 @@ public class UserSearchServiceImpl extends DefaultUserService<UserSearchRequestD
 
 
     @Override
-    public ReactiveResponse<UserSearchRequestData> getUsersLike(String name) {
+    public ReactiveResponse<UserSearchRequestData> getSearchUsersResponse(String username) {
         ReactiveResponse<UserSearchRequestData> response = new ReactiveResponse<>();
         UserSearchRequestData data = new UserSearchRequestData();
-        QueryWrapper<User> userQueryWrapper = new QueryWrapper<>();
-        userQueryWrapper.like("user_username", name);
-        List<User> userGroup = userMapper.selectList(userQueryWrapper);
-        for (User user : userGroup) {
+        List<User> users = Objects.requireNonNullElse(getUsersLike(username), new ArrayList<>());
+        for (User user : users) {
             hidePrivateInfo(user);
         }
-        data.setUsers(userGroup);
+        data.setUsers(users);
         response.setSuccess(data);
         return response;
     }
 
+    private List<User> getUsersLike(String username) {
+        QueryWrapper<User> userQueryWrapper = new QueryWrapper<>();
+        userQueryWrapper.like("user_username", username);
+        return userMapper.selectList(userQueryWrapper);
+    }
+
     @Override
-    public ReactiveResponse<UserSearchRequestData> getUserProfile(String token) {
+    public ReactiveResponse<UserSearchRequestData> getUserProfileResponse(String token) {
         ReactiveResponse<UserSearchRequestData> response = new ReactiveResponse<>();
         try {
             User user = getUserByToken(token);
@@ -56,5 +64,10 @@ public class UserSearchServiceImpl extends DefaultUserService<UserSearchRequestD
             handle(e, response);
         }
         return response;
+    }
+
+    @Override
+    public void handle(Exception e, ReactiveResponse<UserSearchRequestData> response) {
+        response.setError(Status.SERVER_ERROR);
     }
 }
