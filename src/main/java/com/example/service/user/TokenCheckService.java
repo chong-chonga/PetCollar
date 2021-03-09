@@ -1,16 +1,18 @@
-package com.example.service;
+package com.example.service.user;
 
-import com.example.authc.InvalidTokenException;
+import com.example.exception.InvalidTokenException;
 import com.example.pojo.User;
 
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * @author Lexin Huang
+ */
 public interface TokenCheckService {
 
     /**
-     * 根据 token 调用 {@link TokenCheckService#getUserCache(String)} 方法获取对应的用户; 特别的, 当 token 无效时,
-     * 将会抛出{@link InvalidTokenException}异常
+     * 根据 token 调用 {@link TokenCheckService#getUserCache(String token)} 方法获取对应的用户;
      * @param token 用户令牌
      * @return 用户对象, 如果 token 存在的话
      * @throws InvalidTokenException 当 token 无效时
@@ -28,15 +30,22 @@ public interface TokenCheckService {
 
     User getUserCache(String k);
 
-    default void refreshTokenTime(String token, User user) {
+    /**
+     * 刷新用户的 token 和用户信息的缓存有效时间 (默认7天)
+     * @param token 用户令牌
+     * @param user 用户对象
+     * @throws NullPointerException 当 token 为 null 或 username 为 null 时
+     */
+    default void refreshTokenTime(String token, User user) throws NullPointerException{
         if (Objects.isNull(token)) {
             throw new NullPointerException("token 不能为 null!");
         }
-        if (Objects.isNull(user.getUsername())) {
+        if (Objects.isNull(user) || Objects.isNull(user.getUsername())) {
             throw new NullPointerException("username 不能为 null!");
         }
         long timeOut = 7L;
         putUserCache(token, user, timeOut, TimeUnit.DAYS);
+
         putStringCache(user.getUsername(), token, timeOut, TimeUnit.DAYS);
     }
 
