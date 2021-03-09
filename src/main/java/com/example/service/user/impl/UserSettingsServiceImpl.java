@@ -1,20 +1,28 @@
 package com.example.service.user.impl;
 
+import com.example.exception.InvalidTokenException;
 import com.example.dao.CacheDao;
-import com.example.exception.IllegalTextException;
 import com.example.exception.InvalidPasswordException;
+import com.example.exception.UnavailableUsernameException;
 import com.example.pojo.User;
+import com.example.request.user.UserSettingsRequestDTO;
 import com.example.response.ReactiveResponse;
+import com.example.response.Status;
 import com.example.response.data.user.UserSettingsRequestData;
 import com.example.service.AvatarService;
+import com.example.service.ServiceExceptionHandler;
 import com.example.service.user.UserSettingsService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DuplicateKeyException;
+import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.thymeleaf.TemplateEngine;
 
+import javax.mail.MessagingException;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Objects;
 
 
@@ -23,8 +31,8 @@ import java.util.Objects;
  */
 @Slf4j
 @Service
-public class UserSettingsServiceImpl extends DefaultUserService<UserSettingsRequestData>
-                                        implements UserSettingsService, AvatarService {
+public class UserSettingsServiceImpl extends BasicUserService
+                                     implements UserSettingsService, AvatarService, ServiceExceptionHandler<UserSettingsRequestData> {
     private static final String AVATAR_RESOURCE_PATH_PREFIX = "/pet_collar/image/avatar/user/";
 
     private static final String IMAGE_SUFFIX = ".jpg";
@@ -46,20 +54,16 @@ public class UserSettingsServiceImpl extends DefaultUserService<UserSettingsRequ
         try {
             User user = getUserByToken(token);
             verify(oldPassword, user.getPassword());
-            doChangePassword(token, user, newPassword, response);
+            user.setPassword(newPassword);
+            updateById(user);
+            refreshTokenTime(token, user);
+            response.setSuccess(null);
         } catch (Exception e){
             handle(e, response);
         }
         return response;
     }
 
-    private void doChangePassword(String token, User user,
-                                  String newPassword,
-                                  ReactiveResponse<UserSettingsRequestData> response) {
-        user.setPassword(newPassword);
-        executeUpdate(token, user);
-        response.setSuccess(null);
-    }
 
     private void verify(String passwordToVerify, String targetPassword) {
         if (Objects.isNull(targetPassword)) {
@@ -77,21 +81,22 @@ public class UserSettingsServiceImpl extends DefaultUserService<UserSettingsRequ
         try {
             User user = getUserByToken(token);
             deleteOriginalAvatarIfExists(user.getUserPortraitPath());
-            doUploadAvatar(token, user, image, response);
+
+            String avatarUrl = uploadAvatar(image);
+            user.setUserPortraitPath(avatarUrl);
+            updateById(user);
+            refreshTokenTime(token, user);
+            User userData = new User();
+            userData.setUserPortraitPath(avatarUrl);
+            configureSuccessData(response, userData);
         } catch (Exception e){
             handle(e, response);
         }
         return response;
     }
 
-    private void doUploadAvatar(String token, User user, MultipartFile image,
-                                ReactiveResponse<UserSettingsRequestData> response) throws IOException {
-        String avatarUrl = createAvatarFile(image);
-        user.setUserPortraitPath(avatarUrl);
-        executeUpdate(token, user);
-
+    private void configureSuccessData(ReactiveResponse<UserSettingsRequestData> response, User user) {
         UserSettingsRequestData data = new UserSettingsRequestData();
-        hidePrivateInfo(user);
         data.setUser(user);
         response.setSuccess(data);
     }
@@ -99,25 +104,28 @@ public class UserSettingsServiceImpl extends DefaultUserService<UserSettingsRequ
 
     @Override
     public ReactiveResponse<UserSettingsRequestData> getModifyProfileResponse(String token,
-                                                                              User newProfile) {
+                                                                              UserSettingsRequestDTO requestDTO) {
         ReactiveResponse<UserSettingsRequestData> response = new ReactiveResponse<>();
         try{
             User user = getUserByToken(token);
-            doModifyProfile(token, user, newProfile, response);
-        }catch (IllegalTextException e){
+            String originalName = user.getUsername();
+            checkIfNameIsAvailable(requestDTO.getUsername());
+            doModifyProfile(user, requestDTO);
+            removeStringCache(originalName);
+            refreshTokenTime(token, user);
+            configureSuccessData(response, user);
+        }catch (Exception e){
             handle(e, response);
         }
         return response;
     }
 
-    private void doModifyProfile(String token, User userToUpdate,
-                                 User newProfile,
-                                 ReactiveResponse<UserSettingsRequestData> response) {
-        userToUpdate.setUserIntroduction(newProfile.getUserIntroduction());
-        userToUpdate.setUsername(newProfile.getUsername());
-        userToUpdate.setEmailAddress(newProfile.getEmailAddress());
-        executeUpdate(token, userToUpdate);
-        response.setSuccess(null);
+    private void doModifyProfile(User userToUpdate,
+                                 UserSettingsRequestDTO requestDTO) {
+        userToUpdate.setUserIntroduction(requestDTO.getUserIntroduction());
+        userToUpdate.setUsername(requestDTO.getUsername());
+        userToUpdate.setEmailAddress(requestDTO.getEmailAddress());
+        updateById(userToUpdate);
     }
 
 
@@ -132,12 +140,31 @@ public class UserSettingsServiceImpl extends DefaultUserService<UserSettingsRequ
     }
 
     @Override
-    public String getImageSuffix() {
+    public String getAvatarSuffix() {
         return IMAGE_SUFFIX;
     }
 
     @Override
-    public String getDefaultImageName() {
+    public String getDefaultAvatarName() {
         return DEFAULT_IMAGE_NAME;
+    }
+
+    @Override
+    public void handle(Exception e, ReactiveResponse<UserSettingsRequestData> response) {
+        log.info(e.getMessage());
+        if (e instanceof InvalidTokenException) {
+            response.setError(Status.INVALID_TOKEN);
+        } else if (e instanceof IOException) {
+            response.setError(Status.AVATAR_SERVICE_NOT_AVAILABLE);
+        } else if (e instanceof MessagingException || e instanceof MailException) {
+            response.setError(Status.MAIL_SERVICE_NOT_AVAILABLE);
+        } else if (e instanceof InvalidPasswordException) {
+            response.setError(Status.USER_PASSWORD_WRONG);
+        } else if (e instanceof UnavailableUsernameException || e instanceof DuplicateKeyException) {
+            response.setError(Status.USERNAME_NOT_AVAILABLE);
+        } else {
+            log.error(Arrays.toString(e.getStackTrace()));
+            response.setError(Status.SERVER_ERROR);
+        }
     }
 }

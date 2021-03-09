@@ -2,19 +2,24 @@ package com.example.service.pet.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.example.authc.InvalidTokenException;
+import com.example.exception.InvalidTokenException;
 import com.example.dao.CacheDao;
+import com.example.exception.UnavailablePetNameException;
 import com.example.mapper.PetMapper;
 import com.example.pojo.Pet;
 import com.example.pojo.User;
+import com.example.request.pet.PetRequestDTO;
 import com.example.response.ReactiveResponse;
 import com.example.response.Status;
 import com.example.response.data.pet.PetRequestData;
 import com.example.service.AvatarService;
 import com.example.service.ServiceExceptionHandler;
-import com.example.service.TokenCheckService;
+import com.example.service.UniqueNameQueryService;
+import com.example.service.user.TokenCheckService;
 import com.example.service.pet.PetService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.util.Strings;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -31,7 +36,8 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Service
 public class PetServiceImpl extends ServiceImpl<PetMapper, Pet>
-        implements PetService, ServiceExceptionHandler<PetRequestData>, TokenCheckService, AvatarService {
+                            implements PetService, ServiceExceptionHandler<PetRequestData>,
+        TokenCheckService, AvatarService, UniqueNameQueryService<Pet> {
 
     private static final String AVATAR_RESOURCE_PATH_PREFIX = "/pet_collar/image/avatar/pet/";
 
@@ -40,7 +46,10 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet>
     private static final String DEFAULT_IMAGE_NAME = "default.png";
 
     private static final String AVATAR_URL_PREFIX = "http://resource.petcollar.top:8082/image/avatar/pet/";
+
     private static final String DEFAULT_AVATAR_URL_PREFIX = "http://www.petcollar.top:8083/image/avatar/pet/";
+
+    private static final String DEFAULT_PET_INTRODUCTION = "~这只宠物还没有介绍哦~";
 
     private final PetMapper petMapper;
 
@@ -57,20 +66,24 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet>
         try {
             User user = getUserByToken(token);
             refreshTokenTime(token, user);
-            doGetUserPets(user.getUserId(), response);
+            List<Pet> userPets = getUserPets(user.getUserId());
+            configureSuccessData(response, null, userPets, null, null);
         } catch (Exception e) {
             handle(e, response);
         }
         return response;
     }
 
-    private void doGetUserPets(Integer userId, ReactiveResponse<PetRequestData> response) {
-        List<Pet> pets = getUserPets(userId);
+    private void configureSuccessData(ReactiveResponse<PetRequestData> response,
+                                      PetRequestData.PetOwner petOwner, List<Pet> pets, Pet pet,
+                                      String avatarUrl) {
         PetRequestData data = new PetRequestData();
+        data.setPetOwner(petOwner);
         data.setPets(pets);
+        data.setPet(pet);
+        data.setPetPortraitPath(avatarUrl);
         response.setSuccess(data);
     }
-
 
     private List<Pet> getUserPets(int userId) {
         QueryWrapper<Pet> queryWrapper = new QueryWrapper<>();
@@ -80,41 +93,57 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet>
     }
 
     @Override
-    public ReactiveResponse<PetRequestData> getAddPetResponse(String token, Pet petInfo) {
+    public ReactiveResponse<PetRequestData> getAddPetResponse(String token, PetRequestDTO requestDTO) {
         ReactiveResponse<PetRequestData> response = new ReactiveResponse<>();
+
         try {
             User user = getUserByToken(token);
             refreshTokenTime(token, user);
-            doAddPet(petInfo, user.getUserId(), response);
+            Pet pet = createPetToAdd(requestDTO, user.getUserId());
+            checkIfNameIsAvailable(pet.getPetName());
+            save(pet);
+            configureSuccessData(response, null, null, pet, null);
         } catch (Exception e) {
             handle(e, response);
         }
         return response;
     }
 
-    private void doAddPet(Pet petInfo, int userId, ReactiveResponse<PetRequestData> response) {
-        petInfo.setUserId(userId);
-        petInfo.setPetPortraitPath(DEFAULT_AVATAR_URL_PREFIX + DEFAULT_IMAGE_NAME);
-        petInfo.setPetIntroduction(Objects.requireNonNullElse(petInfo.getPetIntroduction(), "~这只宠物还没有介绍哦~"));
-        save(petInfo);
-        PetRequestData data = new PetRequestData();
-        data.setPet(petInfo);
-        response.setSuccess(data);
+    @Override
+    public void checkIfNameIsAvailable(String petName) {
+        if (!Objects.isNull(getByUniqueName(petName))) {
+            throw new UnavailablePetNameException("宠物名称为" + petName + " 的宠物已存在!");
+        }
+    }
+
+
+    private Pet createPetToAdd(PetRequestDTO requestDTO, Integer userId) {
+        Pet pet = new Pet();
+        pet.setPetId(null);
+        pet.setUserId(userId);
+        pet.setPetPortraitPath(DEFAULT_AVATAR_URL_PREFIX + DEFAULT_IMAGE_NAME);
+        pet.setOvert(requestDTO.getOvert());
+        if (Strings.isEmpty(requestDTO.getPetIntroduction())) {
+            pet.setPetIntroduction(DEFAULT_PET_INTRODUCTION);
+        } else {
+            pet.setPetIntroduction(requestDTO.getPetIntroduction());
+        }
+        return pet;
     }
 
 
     @Override
     public ReactiveResponse<PetRequestData> getModifyPetProfileResponse(String token,
                                                                         String petId,
-                                                                        Pet newPetProfile) {
+                                                                        PetRequestDTO requestDTO) {
         ReactiveResponse<PetRequestData> response = new ReactiveResponse<>();
         try {
-
             User user = getUserByToken(token);
             refreshTokenTime(token, user);
-            Pet pet = getById(Integer.parseInt(petId));
-            permissionCheck(pet, user.getUserId());
-            doModifyProfile(pet, newPetProfile, response);
+            Pet petToModify = getById(Integer.parseInt(petId));
+            permissionCheck(petToModify, user.getUserId());
+            modifyProfile(petToModify, requestDTO);
+            configureSuccessData(response, null, null, petToModify, null);
         } catch (Exception e) {
             handle(e, response);
         }
@@ -127,12 +156,12 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet>
         }
     }
 
-    private void doModifyProfile(Pet pet, Pet newPetProfile,
-                                 ReactiveResponse<PetRequestData> response) {
-        newPetProfile.setPetId(pet.getPetId());
-        newPetProfile.setUserId(pet.getUserId());
+    private void modifyProfile(Pet pet, PetRequestDTO requestDTO) {
+        pet.setPetName(requestDTO.getPetName());
+        pet.setPetSpecies(requestDTO.getPetSpecies());
+        pet.setOvert(requestDTO.getOvert());
+        pet.setPetIntroduction(requestDTO.getPetIntroduction());
         updateById(pet);
-        response.setSuccess(null);
     }
 
     @Override
@@ -143,16 +172,31 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet>
             refreshTokenTime(token, user);
             Pet pet = getById(Integer.parseInt(petId));
             permissionCheck(pet, user.getUserId());
-            doRemovePet(pet, response);
+            removeById(pet.getPetId());
+            configureSuccessData(response, null, null, null, null);
         } catch (Exception e) {
             handle(e, response);
         }
         return response;
     }
 
-    private void doRemovePet(Pet pet, ReactiveResponse<PetRequestData> response) {
-        removeById(pet.getPetId());
-        response.setSuccess(null);
+    @Override
+    public ReactiveResponse<PetRequestData> getSameBreedPets(String breed) {
+        ReactiveResponse<PetRequestData> response = new ReactiveResponse<>();
+        try {
+            List<Pet> pets = getByBreed(breed);
+            configureSuccessData(response, null, pets, null, null);
+        } catch (Exception e) {
+            handle(e, response);
+        }
+        return response;
+    }
+
+    private List<Pet> getByBreed(String breed) {
+        QueryWrapper<Pet> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("pet_species", breed);
+        List<Pet> pets = petMapper.selectList(queryWrapper);
+        return Objects.isNull(pets) ? new ArrayList<>() : pets;
     }
 
 
@@ -163,26 +207,18 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet>
         try {
             User user = getUserByToken(token);
             refreshTokenTime(token, user);
+
             Pet pet = getById(Integer.parseInt(petId));
             permissionCheck(pet, user.getUserId());
-            doUploadAvatar(pet, image, response);
+            deleteOriginalAvatarIfExists(pet.getPetPortraitPath());
+            String avatarUrl = uploadAvatar(image);
+            pet.setPetPortraitPath(avatarUrl);
+            updateById(pet);
+            configureSuccessData(response, null, null, null, avatarUrl);
         } catch (Exception e) {
             handle(e, response);
         }
         return response;
-    }
-
-    private void doUploadAvatar(Pet pet, MultipartFile image, ReactiveResponse<PetRequestData> response) throws IOException {
-        String originalPath = pet.getPetPortraitPath();
-        deleteOriginalAvatarIfExists(originalPath);
-        String avatarUrl = createAvatarFile(image);
-        pet.setPetPortraitPath(avatarUrl);
-        updateById(pet);
-        Pet petData = new Pet();
-        petData.setPetPortraitPath(avatarUrl);
-        PetRequestData data = new PetRequestData();
-        data.setPet(pet);
-        response.setSuccess(data);
     }
 
 
@@ -194,6 +230,10 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet>
             response.setError(Status.INVALID_TOKEN);
         } else if (e instanceof AuthenticationException || e instanceof NumberFormatException) {
             response.setError(Status.UNAUTHORIZED);
+        } else if (e instanceof UnavailablePetNameException || e instanceof DuplicateKeyException)  {
+            response.setError(Status.PET_NAME_NOT_AVAILABLE);
+        } else if (e instanceof IOException) {
+            response.setError(Status.SERVER_ERROR, "修改头像服务暂时不可用, 请稍后再试");
         } else {
             log.error(e.getMessage());
             response.setError(Status.SERVER_ERROR);
@@ -230,12 +270,19 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet>
     }
 
     @Override
-    public String getImageSuffix() {
+    public String getAvatarSuffix() {
         return IMAGE_SUFFIX;
     }
 
     @Override
-    public String getDefaultImageName() {
+    public String getDefaultAvatarName() {
         return DEFAULT_IMAGE_NAME;
+    }
+
+    @Override
+    public Pet getByUniqueName(String name) {
+        QueryWrapper<Pet> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("pet_name", name);
+        return getOne(queryWrapper);
     }
 }
