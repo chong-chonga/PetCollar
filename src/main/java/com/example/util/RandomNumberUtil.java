@@ -7,10 +7,10 @@ import java.util.Random;
  */
 public class RandomNumberUtil {
 
-    private static final Random random = new Random();
+    private static final Random RANDOM = new Random();
 
     public static int generateNum(int bound) {
-        return random.nextInt(bound);
+        return RANDOM.nextInt(bound);
     }
 
 }
