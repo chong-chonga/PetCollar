@@ -2,8 +2,8 @@ package com.example.service.user.impl;
 
 import com.example.exception.InvalidTokenException;
 import com.example.dao.CacheDao;
-import com.example.exception.InvalidPasswordException;
-import com.example.exception.UnavailableUsernameException;
+import com.example.exception.user.InvalidPasswordException;
+import com.example.exception.user.UnavailableUsernameException;
 import com.example.pojo.User;
 import com.example.request.user.UserSettingsRequestDTO;
 import com.example.response.ReactiveResponse;
@@ -110,7 +110,7 @@ public class UserSettingsServiceImpl extends BasicUserService
             User user = getUserByToken(token);
             String originalName = user.getUsername();
             checkIfNameIsAvailable(requestDTO.getUsername());
-            doModifyProfile(user, requestDTO);
+            modifyProfile(user, requestDTO);
             removeStringCache(originalName);
             refreshTokenTime(token, user);
             configureSuccessData(response, user);
@@ -120,8 +120,8 @@ public class UserSettingsServiceImpl extends BasicUserService
         return response;
     }
 
-    private void doModifyProfile(User userToUpdate,
-                                 UserSettingsRequestDTO requestDTO) {
+    private void modifyProfile(User userToUpdate,
+                               UserSettingsRequestDTO requestDTO) {
         userToUpdate.setUserIntroduction(requestDTO.getUserIntroduction());
         userToUpdate.setUsername(requestDTO.getUsername());
         userToUpdate.setEmailAddress(requestDTO.getEmailAddress());

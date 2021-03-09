@@ -3,7 +3,7 @@ package com.example.service.user.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.exception.UnavailableNameException;
-import com.example.exception.UnavailableUsernameException;
+import com.example.exception.user.UnavailableUsernameException;
 import com.example.mapper.UserMapper;
 import com.example.pojo.User;
 import com.example.service.UniqueNameQueryService;
@@ -24,12 +24,11 @@ public class EnhanceUserQueryServiceImpl extends ServiceImpl<UserMapper, User> i
     }
 
     @Override
-    public void checkIfNameIsAvailable(String name) throws UnavailableNameException {
+    public void checkIfNameIsAvailable(String name) throws UnavailableUsernameException {
         if (exist(name)) {
             throw new UnavailableUsernameException("用户名称为 " + name + " 的用户已存在!");
         }
     }
-
 
     /**
      * 隐藏用户私密信息

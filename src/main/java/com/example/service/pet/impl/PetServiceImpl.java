@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.exception.InvalidTokenException;
 import com.example.dao.CacheDao;
-import com.example.exception.UnavailablePetNameException;
+import com.example.exception.pet.UnavailablePetNameException;
 import com.example.mapper.PetMapper;
 import com.example.pojo.Pet;
 import com.example.pojo.User;
@@ -110,7 +110,7 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet>
     }
 
     @Override
-    public void checkIfNameIsAvailable(String petName) {
+    public void checkIfNameIsAvailable(String petName) throws UnavailablePetNameException{
         if (!Objects.isNull(getByUniqueName(petName))) {
             throw new UnavailablePetNameException("宠物名称为" + petName + " 的宠物已存在!");
         }

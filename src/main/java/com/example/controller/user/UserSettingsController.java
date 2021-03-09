@@ -20,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequestMapping("/settings")
 public class UserSettingsController {
+
     private final
     UserSettingsService userSettingsService;
 

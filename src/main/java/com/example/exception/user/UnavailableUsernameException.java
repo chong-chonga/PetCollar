@@ -1,4 +1,6 @@
-package com.example.exception;
+package com.example.exception.user;
+
+import com.example.exception.UnavailableNameException;
 
 /**
  * @author Lexin Huang

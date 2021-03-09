@@ -30,7 +30,7 @@ public enum Status {
 
     //       ---SYS_ERROR---
     MAIL_SERVICE_NOT_AVAILABLE(900001, "邮箱服务暂时不可用!"),
-    AVATAR_SERVICE_NOT_AVAILABLE(900002, "头像服务暂时不可用!"),
+    AVATAR_SERVICE_NOT_AVAILABLE(900002, "服务正在升级中, 暂时不可更换头像!"),
     SERVER_ERROR(999999, "服务器出错了! 请联系管理员以获得帮助");
 
 

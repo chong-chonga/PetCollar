@@ -40,6 +40,7 @@ public class UserSettingsRequestDTO {
     @ApiModelProperty(value = "用户邮箱")
     private String emailAddress;
 
+
     public interface ChangePasswordGroup{
 
     }
