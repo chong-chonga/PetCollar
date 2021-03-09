@@ -16,6 +16,4 @@ import lombok.ToString;
 @ToString
 public class UserSettingsRequestData extends ReactiveResponse.ApiData {
     private User user;
-
-
 }

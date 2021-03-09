@@ -15,7 +15,7 @@ import lombok.ToString;
 @Data
 @NoArgsConstructor
 @ToString
-public class UserLoginRegisterRequestData extends ReactiveResponse.ApiData {
+public class UserAccountRequestData extends ReactiveResponse.ApiData {
     private String token;
     private User user;
     private String verificationCode;

@@ -1,6 +1,6 @@
 package com.example.service.user;
 
-import com.example.pojo.User;
+import com.example.request.user.UserSettingsRequestDTO;
 import com.example.response.ReactiveResponse;
 import com.example.response.data.user.UserSettingsRequestData;
 import org.springframework.web.multipart.MultipartFile;
@@ -14,5 +14,6 @@ public interface UserSettingsService {
                                                                       MultipartFile image);
 
     ReactiveResponse<UserSettingsRequestData> getModifyProfileResponse(String token,
-                                                                       User newProfile);
+                                                                       UserSettingsRequestDTO requestDTO);
+
 }

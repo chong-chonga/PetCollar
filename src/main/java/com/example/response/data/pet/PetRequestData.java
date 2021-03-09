@@ -19,8 +19,9 @@ import java.util.List;
 @ToString
 public class PetRequestData extends ReactiveResponse.ApiData {
     private PetOwner petOwner;
-    List<Pet> pets;
-    Pet pet;
+    private List<Pet> pets;
+    private Pet pet;
+    private String petPortraitPath;
 
     @Data
     @ToString
@@ -37,13 +38,6 @@ public class PetRequestData extends ReactiveResponse.ApiData {
         }
     }
 
-    public void configureData(List<Pet> pets,
-                               PetRequestData.PetOwner petOwner,
-                               Pet pet) {
-        this.pets = pets;
-        this.petOwner = petOwner;
-        this.pet = pet;
-    }
 }
 
 
