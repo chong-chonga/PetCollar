@@ -28,7 +28,7 @@ public class ReactiveResponse<T extends ReactiveResponse.ApiData> {
     }
 
     public ReactiveResponse() {
-        setStatus(SERVER_ERROR);
+        setError(SERVER_ERROR);
     }
 
     private void setData(T data) {
@@ -36,7 +36,12 @@ public class ReactiveResponse<T extends ReactiveResponse.ApiData> {
     }
 
     public void setError(Status status) {
-        setStatus(status);
+        setStatus(status.value, status.msg);
+        setData(null);
+    }
+
+    public void setError(Status status, String msg) {
+        setStatus(status.value, msg);
         setData(null);
     }
 
@@ -47,13 +52,13 @@ public class ReactiveResponse<T extends ReactiveResponse.ApiData> {
     }
 
     public void setSuccess(T data) {
-        setStatus(SUCCESS);
+        setStatus(SUCCESS.value, SUCCESS.msg);
         setData(data);
     }
 
-    private void setStatus(Status status) {
-        this.code = status.value;
-        this.msg = status.msg;
+    private void setStatus(int code, String msg) {
+        this.code = code;
+        this.msg = msg;
     }
 
 }
