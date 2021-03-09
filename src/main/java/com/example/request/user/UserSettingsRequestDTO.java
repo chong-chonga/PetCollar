@@ -1,6 +1,5 @@
 package com.example.request.user;
 
-import com.example.pojo.UserUpdateProfile;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -40,14 +39,6 @@ public class UserSettingsRequestDTO {
             , groups = {ModifyProfileGroup.class})
     @ApiModelProperty(value = "用户邮箱")
     private String emailAddress;
-
-    public UserUpdateProfile createUserProfile() {
-        UserUpdateProfile userUpdateProfile = new UserUpdateProfile();
-        userUpdateProfile.setUsername(this.username);
-        userUpdateProfile.setUserIntroduction(this.userIntroduction);
-        userUpdateProfile.setEmailAddress(this.emailAddress);
-        return userUpdateProfile;
-    }
 
     public interface ChangePasswordGroup{
 
