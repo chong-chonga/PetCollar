@@ -1,6 +1,7 @@
 package com.example.controller.pet;
 
-import com.example.pojo.Pet;
+import com.example.request.pet.PetRequestDTO;
+import com.example.request.pet.PetRequestDTO.*;
 import com.example.response.ReactiveResponse;
 import com.example.response.data.pet.PetRequestData;
 import com.example.service.pet.PetService;
@@ -16,7 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
  */
 @Api(tags = "宠物模块")
 @RestController
-public class PetController extends PetParamsCheckController {
+public class PetController {
 
     private final PetService petService;
 
@@ -24,12 +25,20 @@ public class PetController extends PetParamsCheckController {
         this.petService = petService;
     }
 
-    @GetMapping("/pets")
+    @GetMapping("/pets/view")
     @ApiOperation("获取用户所有宠物信息接口")
     @ApiImplicitParam(name = "token", value = "用户令牌", required = true,
                       dataTypeClass = String.class, paramType = "header")
     public ReactiveResponse<PetRequestData> getUserPets(@RequestHeader(value = "token") String token) {
         return petService.getUserPetsResponse(token);
+    }
+
+    @GetMapping("/pets")
+    @ApiOperation(("查询同品种的宠物"))
+    @ApiImplicitParam(name = "breed", value = "宠物品种", required = true,
+                    dataTypeClass = String.class, paramType = "query")
+    public ReactiveResponse<PetRequestData> getPetsOfTheSameBreed(@RequestParam("breed") String breed) {
+        return petService.getSameBreedPets(breed);
     }
 
 
@@ -40,7 +49,7 @@ public class PetController extends PetParamsCheckController {
                     dataTypeClass = String.class, paramType = "header")
     })
     public ReactiveResponse<PetRequestData> addPet(@RequestHeader("token") String token,
-                                                   @Validated @RequestBody Pet pet) {
+                                                   @Validated(value = AddPetGroup.class) @RequestBody PetRequestDTO pet) {
         return petService.getAddPetResponse(token, pet);
     }
 
@@ -55,7 +64,7 @@ public class PetController extends PetParamsCheckController {
     })
     public ReactiveResponse<PetRequestData> modifyPetProfile(@RequestHeader("token") String token,
                                                              @PathVariable String petId,
-                                                             @Validated @RequestBody Pet newPetProfile) {
+                                                             @Validated(ModifyPetProfileGroup.class) @RequestBody PetRequestDTO newPetProfile) {
         return petService.getModifyPetProfileResponse(token, petId, newPetProfile);
     }
 
@@ -76,7 +85,7 @@ public class PetController extends PetParamsCheckController {
     }
 
 
-    @DeleteMapping("/pets/{petId}")
+    @DeleteMapping("/pets/pets/{petId}")
     @ApiOperation("删除指定宠物接口")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "token", value = "用户令牌", required = true,
