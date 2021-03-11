@@ -85,7 +85,7 @@ public class PetController {
     }
 
 
-    @DeleteMapping("/pets/pets/{petId}")
+    @DeleteMapping("/pets/{petId}")
     @ApiOperation("删除指定宠物接口")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "token", value = "用户令牌", required = true,
